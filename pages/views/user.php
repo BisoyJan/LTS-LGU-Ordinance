@@ -111,29 +111,6 @@ include('../includes/main/navigation.php');
 </div>
 
 <script>
-
-    // $(document).ready(function () {
-    //     $('#usersTable').DataTable({
-    //         "fnCreatedRow": function (nRow, aData, iDataIndex) {
-    //             $(nRow).attr('id', aData[0]);
-    //         },
-    //         'serverSide': 'true',
-    //         'processing': 'true',
-    //         'paging': 'true',
-    //         'order': [],
-    //         'ajax': {
-    //             'url': '../../controller/dataTable/usersTable.php',
-    //             'type': 'post',
-    //         },
-    //         "aoColumnDefs": [{
-    //             "bSortable": false,
-    //             //"aTargets": [8]
-    //         },
-
-    //         ]
-    //     });
-    // });
-
     $(document).ready(function () {
         $('#usersTable').DataTable({
             "fnCreatedRow": function (nRow, aData, iDataIndex) {
@@ -167,8 +144,6 @@ include('../includes/main/navigation.php');
             }
         });
     });
-
-
 
     $(document).on('submit', '#userForm', function (e) {
         e.preventDefault();
