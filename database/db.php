@@ -1,16 +1,12 @@
 <?php
-$servername = "localhost";
-$username = "username";
-$password = "password";
-$dbname = "database_name";
+session_start();
+global $conn;
+date_default_timezone_set('Asia/Manila');
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = mysqli_connect("localhost", "root", "", "lgu_ordinance_system") or die("Connection failed: " . mysqli_connect_error());
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+/* check connection */
+if (mysqli_connect_errno()) {
+    printf("Connect failed: %s\n", mysqli_connect_error());
+    exit();
 }
-echo "Connected successfully";
-?>
-

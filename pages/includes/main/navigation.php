@@ -33,13 +33,13 @@
     </div>
     <ul class="nav flex-column mt-3">
         <li class="nav-item">
-            <a href="#" class="nav-link active">
+            <a href="../views/dashboard.php" class="nav-link active">
                 <i class="fas fa-tachometer-alt me-2"></i>
                 <span>Dashboard</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="../views/user.php" class="nav-link">
                 <i class="fas fa-users me-2"></i>
                 <span>Users</span>
             </a>
@@ -76,3 +76,6 @@
         </li>
     </ul>
 </div>
+
+<!-- Main Content Area -->
+<div class="main-content">
