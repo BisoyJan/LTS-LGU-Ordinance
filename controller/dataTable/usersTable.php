@@ -17,17 +17,27 @@ $total_all_rows = mysqli_num_rows($totalQuery);
 $whereClause = "";
 if (!empty($search_value)) {
     $search_value = mysqli_real_escape_string($conn, $search_value);
-    $whereClause = " WHERE username LIKE '%$search_value%' OR role LIKE '%$search_value%'";
+    $whereClause = " WHERE username LIKE '%$search_value%' OR email LIKE '%$search_value%' OR role LIKE '%$search_value%'";
 }
 
 // Sorting
 $orderClause = " ORDER BY id DESC"; // Default order
 if (isset($_POST['order']) && isset($_POST['order'][0]['column']) && isset($_POST['order'][0]['dir'])) {
     $column_index = intval($_POST['order'][0]['column']);
-    $order_direction = ($_POST['order'][0]['dir'] === 'asc') ? 'ASC' : 'DESC';
+    $order_direction = ($_POST['order'][0]['dir'] === 'asc') ? 'DESC' : 'ASC';
     if (isset($columns[$column_index])) {
         $orderClause = " ORDER BY " . $columns[$column_index] . " " . $order_direction;
     }
+}
+
+// Get total filtered count
+if (!empty($whereClause)) {
+    $filtered_query = "SELECT COUNT(*) as total FROM users" . $whereClause;
+    $filtered_result = mysqli_query($conn, $filtered_query);
+    $filtered_row = mysqli_fetch_assoc($filtered_result);
+    $count_filtered_rows = $filtered_row['total'];
+} else {
+    $count_filtered_rows = $total_all_rows;
 }
 
 // Pagination
@@ -51,12 +61,10 @@ while ($row = mysqli_fetch_assoc($query)) {
         htmlspecialchars($row['username']),
         htmlspecialchars($row["email"]),
         htmlspecialchars($row['role']),
-        '<button class="studentEditButton btn btn-success ms-1" value="' . htmlspecialchars($row["id"]) . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#StudentModal">Update</button>
-        <button class="studentDeleteButton btn btn-danger" value="' . htmlspecialchars($row["id"]) . '" type="button" data-bs-toggle="modal" data-bs-target="#StudentDeleteModal">Delete</button>'
+        '<button class="userEditButton btn btn-success ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#userModal">Update</button>
+        <button class="DeleteButton btn btn-danger" data-id="' . $row["id"] . '" onclick="formIDChangeDelete()" type="button" data-bs-toggle="modal" data-bs-target="#StudentDeleteModal">Delete</button>'
     ];
 }
-
-$count_filtered_rows = mysqli_num_rows($query);
 
 // Output JSON response
 $output = array(

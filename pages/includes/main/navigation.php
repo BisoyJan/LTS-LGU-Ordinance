@@ -28,48 +28,55 @@
 <!-- Sidebar -->
 <div class="sidebar">
     <div class="logo-container text-center">
-        <img src="https://via.placeholder.com/80" alt="Logo" class="mb-3">
+        <img src="../../assets/img/logo.png" alt="Logo" class="mb-3">
         <h5 class="fw-bold">LGU System</h5>
     </div>
     <ul class="nav flex-column mt-3">
         <li class="nav-item">
-            <a href="../views/dashboard.php" class="nav-link active">
+            <a href="../views/dashboard.php" class="nav-link 
+            <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>">
                 <i class="fas fa-tachometer-alt me-2"></i>
                 <span>Dashboard</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="../views/user.php" class="nav-link">
+            <a href="../views/user.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'user.php' ? 'active' : ''; ?>">
                 <i class="fas fa-users me-2"></i>
                 <span>Users</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="../views/document.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'document.php' ? 'active' : ''; ?>">
                 <i class="fas fa-file-alt me-2"></i>
                 <span>Documents</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="../views/ordinance.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinance.php' ? 'active' : ''; ?>">
                 <i class="fas fa-book me-2"></i>
                 <span>Ordinances</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="../views/schedule.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'schedule.php' ? 'active' : ''; ?>">
                 <i class="fas fa-calendar-alt me-2"></i>
                 <span>Schedules</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="../views/report.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'report.php' ? 'active' : ''; ?>">
                 <i class="fas fa-chart-bar me-2"></i>
                 <span>Reports</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="../views/setting.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'setting.php' ? 'active' : ''; ?>">
                 <i class="fas fa-cog me-2"></i>
                 <span>Settings</span>
             </a>
@@ -77,5 +84,21 @@
     </ul>
 </div>
 
+
 <!-- Main Content Area -->
 <div class="main-content">
+
+    <!-- Toast Container (Positioning) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="toastMessage" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <img id="toastIcon" src="" width="20" height="20" class="rounded me-2" alt="Icon">
+                <strong id="toastTitle" class="me-auto">Notification</strong>
+                <small id="toastTime">Just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                <!-- Dynamic Message Here -->
+            </div>
+        </div>
+    </div>

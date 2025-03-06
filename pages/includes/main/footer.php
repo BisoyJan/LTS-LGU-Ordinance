@@ -32,19 +32,7 @@
         }, false);
     })();
 
-    function showToast(message, type) {
-        let toastElement = document.getElementById("toastMessage");
-        let toastBody = document.getElementById("toastBody");
 
-        // Update toast content and color
-        toastBody.innerHTML = message;
-        toastElement.classList.remove("bg-success", "bg-danger", "bg-warning");
-        toastElement.classList.add("bg-" + type);
-
-        // Show the toast
-        let toast = new bootstrap.Toast(toastElement);
-        toast.show();
-    }
 </script>
 </body>
 

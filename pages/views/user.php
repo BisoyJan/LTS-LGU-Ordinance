@@ -12,38 +12,13 @@ include('../includes/main/navigation.php');
         </div>
         <div class="col">
             <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal"
+                    onclick="formIDChangeAdd()">
                     Add User
                 </button>
             </div>
         </div>
     </div>
-
-    <!-- <div class="table-responsive">
-        <table id=userTable class="table table-hover text-center">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>admin</td>
-                    <td>Admin User</td>
-                    <td>qLJ8u@example.com</td>
-                    <td>Admin</td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-primary">Edit</button>
-                        <button type="button" class="btn btn-sm btn-danger">Delete</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div> -->
 
     <div class="table-responsive">
         <table id="usersTable" class="table table-hover text-center">
@@ -65,14 +40,14 @@ include('../includes/main/navigation.php');
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="userModalLabel">Add User</h5>
+                <h5 class="modal-title" id="userModalLabel"> User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST" class="needs-validation" id="userForm"
-                    novalidate>
+                <form method="POST" class="needs-validation" id="userForm" novalidate>
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
+                        <input type="hidden" name="id" id="id" value="">
                         <input type="text" class="form-control" id="username" name="username" required>
                         <div class="invalid-feedback">
                             Please choose a username.
@@ -103,7 +78,7 @@ include('../includes/main/navigation.php');
                             Please select a role.
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Add User</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
         </div>
@@ -145,6 +120,19 @@ include('../includes/main/navigation.php');
         });
     });
 
+    function formIDChangeAdd() {
+        $("form").attr('id', 'userForm')
+        $('#userForm')[0].reset();
+        var label = document.getElementById('userModalLabel');
+        label.innerHTML = "Add User";
+    };
+
+    function formIDChangeEdit() {
+        $("form").attr('id', 'userUpdateForm')
+        var label = document.getElementById('userModalLabel');
+        label.innerHTML = "Edit User";
+    };
+
     $(document).on('submit', '#userForm', function (e) {
         e.preventDefault();
 
@@ -158,20 +146,100 @@ include('../includes/main/navigation.php');
             contentType: false,
             processData: false,
             success: function (response) {
-                var res = jQuery.parseJSON(response);
-                if (res.status == 'success') {
-                    $('#userModal').modal('hide');
-                    alert(res.message);
-                } else {
-                    alert(res.message);
+
+                try {
+                    var res = jQuery.parseJSON(response);
+                    if (res.status == 'success') {
+                        $('#userModal').modal('hide');
+                        mytable = $('#usersTable').DataTable();
+                        mytable.draw();
+                        showToast(res.message, 'success');
+                    } else if (res.status == 'warning') {
+                        showToast(res.message, 'warning');
+                    } else {
+                        showToast(res.message, 'danger');
+                    }
+                } catch (error) {
+                    console.error("Error parsing JSON: ", error, response);
+                    showToast("Invalid response from server", "danger");
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '.userEditButton', function (e) {
+        e.preventDefault();
+        var id = $(this).attr('data-id');
+
+        $.ajax({
+            type: 'POST',
+            url: '../../controller/store/user_controller.php',
+            data: {
+                'id': id,
+                'fetch_User': true
+            },
+            success: function (response) {
+                try {
+                    var res = jQuery.parseJSON(response);
+                    console.log("Parsed Response: ", res.data); // Logs parsed JSON response
+
+                    if (res.status === 'success') {
+
+                        $('#userModal').modal('show');
+
+                        $('#id').val(res.data.id);
+                        $('#username').val(res.data.username);
+                        $('#email').val(res.data.email);
+                        $('#role').val(res.data.role);
+
+                        console.log("After setting - Username field value:", $('#username').val());
+                        formIDChangeEdit();
+
+                    } else {
+                        showToast(res.message, 'danger');
+                    }
+                } catch (error) {
+                    console.error("Error parsing JSON: ", error, response);
+                    showToast("Invalid response from server", "danger");
+                }
+            }
+        });
+    });
+
+    $(document).on('submit', '#userUpdateForm', function (e) {
+        e.preventDefault();
+
+        var formData = new FormData(this);
+        formData.append('update_User', true);
+
+        $.ajax({
+            type: 'POST',
+            url: '../../controller/store/user_controller.php',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+
+                try {
+                    var res = jQuery.parseJSON(response);
+                    if (res.status == 'success') {
+                        $('#userModal').modal('hide');
+                        mytable = $('#usersTable').DataTable();
+                        mytable.draw();
+                        showToast(res.message, 'success');
+                    } else if (res.status == 'warning') {
+                        showToast(res.message, 'warning');
+                    } else {
+                        showToast(res.message, 'danger');
+                    }
+                } catch (error) {
+                    console.error("Error parsing JSON: ", error, response);
+                    showToast("Invalid response from server", "danger");
                 }
             }
         });
     });
 </script>
-
-
-
 
 <?php
 include('../includes/main/footer.php');

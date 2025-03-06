@@ -36,6 +36,74 @@ if (isset($_SESSION['toast'])) {
         crossorigin="anonymous"></script>
 
 
+    <script>
+        // Function to show toast message dynamically
+        function showToast(message, type) {
+            let toastElement = $('#toastMessage');
+            let toastBody = $('#toastBody');
+            let toastTitle = $('#toastTitle');
+            let toastIcon = $('#toastIcon');
+            let toastTime = $('#toastTime');
+
+            // Define title, icon, and border color based on type
+            let title, iconSrc, borderColor;
+            if (type === 'success') {
+                title = "Success";
+                iconSrc = "https://cdn-icons-png.flaticon.com/512/845/845646.png"; // Green Check Icon
+                borderColor = "border-success shadow-success";
+            } else if (type === 'warning') {
+                title = "Warning";
+                iconSrc = "https://cdn-icons-png.flaticon.com/512/564/564619.png"; // Yellow Warning Icon
+                borderColor = "border-warning shadow-warning";
+            } else {
+                title = "Error";
+                iconSrc = "https://cdn-icons-png.flaticon.com/512/463/463612.png"; // Red Error Icon
+                borderColor = "border-danger shadow-danger";
+            }
+
+            // Update toast content
+            toastTitle.text(title);
+            toastIcon.attr("src", iconSrc);
+            toastBody.html(message);
+
+            // Store timestamp for updating time
+            let toastTimestamp = new Date();
+            toastTime.attr("data-time", toastTimestamp.getTime());
+            toastTime.text("Just now");
+
+            // Remove previous border classes and apply new one
+            toastElement.removeClass("border-success border-danger border-warning shadow-success shadow-danger shadow-warning")
+                .addClass(borderColor);
+
+            // Show toast
+            let toast = new bootstrap.Toast(toastElement[0]);
+            toast.show();
+
+            // Start updating the toast time dynamically
+            updateToastTime();
+        }
+
+        // Function to update the toast time dynamically every minute
+        function updateToastTime() {
+            setInterval(function () {
+                let toastTimeElement = $('#toastTime');
+                let toastTimestamp = parseInt(toastTimeElement.attr("data-time"));
+                let now = new Date().getTime();
+                let diffInMinutes = Math.floor((now - toastTimestamp) / 60000);
+
+                if (diffInMinutes === 0) {
+                    toastTimeElement.text("Just now");
+                } else if (diffInMinutes === 1) {
+                    toastTimeElement.text("1 min ago");
+                } else {
+                    toastTimeElement.text(diffInMinutes + " mins ago");
+                }
+            }, 60000);
+        }
+
+    </script>
+
+
     <style>
         body {
             overflow-x: hidden;
