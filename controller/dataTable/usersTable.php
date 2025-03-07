@@ -61,8 +61,8 @@ while ($row = mysqli_fetch_assoc($query)) {
         htmlspecialchars($row['username']),
         htmlspecialchars($row["email"]),
         htmlspecialchars($row['role']),
-        '<button class="userEditButton btn btn-success ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#userModal">Update</button>
-        <button class="DeleteButton btn btn-danger" data-id="' . $row["id"] . '" onclick="formIDChangeDelete()" type="button" data-bs-toggle="modal" data-bs-target="#StudentDeleteModal">Delete</button>'
+        '<button class="editButton btn btn-success ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#userModal">Update</button>
+        <button class="deleteButton btn btn-danger" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#userDeleteModal">Delete</button>'
     ];
 }
 

@@ -85,6 +85,27 @@ include('../includes/main/navigation.php');
     </div>
 </div>
 
+<div class="modal fade" id="userDeleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="deleteForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="deleteID" id="deleteID" value="">
+                    <p>Are you sure you want to delete this user?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     $(document).ready(function () {
         $('#usersTable').DataTable({
@@ -167,7 +188,7 @@ include('../includes/main/navigation.php');
         });
     });
 
-    $(document).on('click', '.userEditButton', function (e) {
+    $(document).on('click', '.editButton', function (e) {
         e.preventDefault();
         var id = $(this).attr('data-id');
 
@@ -224,6 +245,48 @@ include('../includes/main/navigation.php');
                     var res = jQuery.parseJSON(response);
                     if (res.status == 'success') {
                         $('#userModal').modal('hide');
+                        mytable = $('#usersTable').DataTable();
+                        mytable.draw();
+                        showToast(res.message, 'success');
+                    } else if (res.status == 'warning') {
+                        showToast(res.message, 'warning');
+                    } else {
+                        showToast(res.message, 'danger');
+                    }
+                } catch (error) {
+                    console.error("Error parsing JSON: ", error, response);
+                    showToast("Invalid response from server", "danger");
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '.deleteButton', function (e) {
+        e.preventDefault();
+        var id = $(this).attr('data-id');
+        //console.log("Delete ID: ", id);
+        $('#userDeleteModal').modal('show');
+        $('#deleteID').val(id);
+    })
+
+    $(document).on('submit', '#deleteForm', function (e) {
+        e.preventDefault();
+
+        var formData = new FormData(this);
+        formData.append('delete_User', true);
+
+        $.ajax({
+            type: 'POST',
+            url: '../../controller/store/user_controller.php',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+
+                try {
+                    var res = jQuery.parseJSON(response);
+                    if (res.status == 'success') {
+                        $('#userDeleteModal').modal('hide');
                         mytable = $('#usersTable').DataTable();
                         mytable.draw();
                         showToast(res.message, 'success');

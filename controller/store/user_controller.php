@@ -89,3 +89,25 @@ if (isset($_POST['update_User'])) {
     echo json_encode($res);
     return;
 }
+
+if (isset($_POST['delete_User'])) {
+    $id = mysqli_real_escape_string($conn, $_POST['deleteID']);
+
+    $sql = "DELETE FROM users WHERE id = '$id'";
+
+    try {
+        $conn->query($sql);
+        $res = [
+            'status' => 'success',
+            'message' => 'User deleted successfully'
+        ];
+    } catch (mysqli_sql_exception $e) {
+        $res = [
+            'status' => 'error',
+            'message' => 'Error deleting user: ' . $e->getMessage()
+        ];
+    }
+
+    echo json_encode($res);
+    return;
+}
