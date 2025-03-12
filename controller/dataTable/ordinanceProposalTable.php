@@ -77,7 +77,7 @@ while ($row = mysqli_fetch_assoc($query)) {
         htmlspecialchars($row['id']),
         htmlspecialchars($row['proposal']),
         htmlspecialchars($formatted_date),
-        truncateText(htmlspecialchars($row["details"]), 20),  // Truncate details to 20 words
+        truncateText(htmlspecialchars($row["details"]), 6),  // Truncate details to 20 words
         '<span class="badge bg-' . getStatusColor($row['status']) . '">' . htmlspecialchars($row['status']) . '</span>',
         '<div class="file-attachment">
             <span class="file-icon">' . getFileIcon($row['file_type']) . '</span>
@@ -152,7 +152,7 @@ function truncateText($text, $limit = 20)
 {
     $words = explode(' ', $text);
     if (count($words) > $limit) {
-        return implode(' ', array_slice($words, 0, $limit)) . '...';
+        return implode(' ', array_slice($words, 0, $limit)) . '.....';
     }
     return $text;
 }
