@@ -78,7 +78,10 @@ include('../includes/main/navigation.php');
                             Please select a role.
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -214,7 +217,6 @@ include('../includes/main/navigation.php');
                         $('#role').val(res.data.role);
 
                         console.log("After setting - Username field value:", $('#username').val());
-                        formIDChangeEdit();
 
                     } else {
                         showToast(res.message, 'danger');
@@ -223,6 +225,10 @@ include('../includes/main/navigation.php');
                     console.error("Error parsing JSON: ", error, response);
                     showToast("Invalid response from server", "danger");
                 }
+            },
+            error: function (xhr, status, error) {
+                console.error('Ajax Error:', error);
+                showToast('Failed to fetch proposal details', 'danger');
             }
         });
     });

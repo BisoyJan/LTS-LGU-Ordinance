@@ -47,10 +47,10 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="../views/document.php" class="nav-link
-            <?php echo basename($_SERVER['PHP_SELF']) == 'document.php' ? 'active' : ''; ?>">
+            <a href="../views/ordinanceProposal.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceProposal.php' ? 'active' : ''; ?>">
                 <i class="fas fa-file-alt me-2"></i>
-                <span>Documents</span>
+                <span>Ordinance Proposal</span>
             </a>
         </li>
         <li class="nav-item">

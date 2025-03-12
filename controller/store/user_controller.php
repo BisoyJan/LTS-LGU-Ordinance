@@ -14,11 +14,11 @@ if (isset($_POST['fetch_User'])) {
     $query_run = mysqli_query($conn, $sql);
 
     try {
-        $user_data = $query_run->fetch_assoc();
+        $data = $query_run->fetch_assoc();
         $res = [
-            'status' => $user_data ? 'success' : 'warning',
-            'data' => $user_data ?? [],
-            'message' => $user_data ? '' : 'User ID not found'
+            'status' => $data ? 'success' : 'warning',
+            'data' => $data ?? [],
+            'message' => $data ? '' : 'User ID not found'
         ];
     } catch (mysqli_sql_exception $e) {
         $res = [
