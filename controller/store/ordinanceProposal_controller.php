@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 if (isset($_POST['fetch_Proposal'])) {
     $proposal_id = mysqli_real_escape_string($conn, $_POST['id']);
 
-    $sql = "SELECT id, proposal, proposal_date, details, status, file_name FROM ordinance_proposals WHERE id = '$proposal_id'";
+    $sql = "SELECT id, proposal, proposal_date, details, status, file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
 
     $query_run = mysqli_query($conn, $sql);
 

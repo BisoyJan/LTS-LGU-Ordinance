@@ -77,10 +77,16 @@ while ($row = mysqli_fetch_assoc($query)) {
         htmlspecialchars($row['id']),
         htmlspecialchars($row['proposal']),
         htmlspecialchars($formatted_date),
-        htmlspecialchars($row["details"]),
+        truncateText(htmlspecialchars($row["details"]), 20),  // Truncate details to 20 words
         '<span class="badge bg-' . getStatusColor($row['status']) . '">' . htmlspecialchars($row['status']) . '</span>',
-        $file_html,
-        '<button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#proposalModal"><i class="fas fa-edit"></i></button>
+        '<div class="file-attachment">
+            <span class="file-icon">' . getFileIcon($row['file_type']) . '</span>
+            <a href="' . htmlspecialchars($row['file_path']) . '" target="_blank" class="file-link" data-path="' . htmlspecialchars($row['file_path']) . '">
+                ' . htmlspecialchars($row['file_name']) . ' (' . formatFileSize($row['file_size']) . ')
+            </a>
+        </div>',
+        '<button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewProposalModal"><i class="fas fa-eye"></i></button>
+        <button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#proposalModal"><i class="fas fa-edit"></i></button>
         <button class="viewFileButton btn btn-info btn-sm ms-1" data-id="' . $row["id"] . '" ' . (empty($row['file_path']) ? 'disabled' : '') . ' onclick="viewFile(\'' . $row['file_path'] . '\')" type="button"><i class="fas fa-file-alt"></i></button>
         <button class="deleteButton btn btn-danger btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#proposalDeleteModal"><i class="fas fa-trash"></i></button>'
     ];
@@ -139,6 +145,16 @@ function getFileIcon($fileType)
         default:
             return '<i class="fas fa-file text-secondary"></i>';
     }
+}
+
+// Function to truncate text
+function truncateText($text, $limit = 20)
+{
+    $words = explode(' ', $text);
+    if (count($words) > $limit) {
+        return implode(' ', array_slice($words, 0, $limit)) . '...';
+    }
+    return $text;
 }
 
 // Output JSON response

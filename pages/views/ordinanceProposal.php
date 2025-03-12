@@ -122,6 +122,53 @@ include '../includes/main/navigation.php';
             </div>
         </div>
     </div>
+
+    <!-- Replace the proposalViewCard with this modal -->
+    <div class="modal fade" id="viewProposalModal" tabindex="-1" aria-labelledby="viewProposalModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="viewProposalModalLabel">View Proposal Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Proposal:</div>
+                        <div class="col-md-9" id="viewProposal"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Date:</div>
+                        <div class="col-md-9" id="viewProposalDate"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Details:</div>
+                        <div class="col-md-9" id="viewDetails"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Status:</div>
+                        <div class="col-md-9" id="viewStatus"></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">File:</div>
+                        <div class="col-md-9">
+                            <div id="viewFile" class="d-flex align-items-center">
+                                <span class="file-name me-2"></span>
+                                <a href="#" class="btn btn-sm btn-primary view-file-btn" style="display:none;">
+                                    <i class="fas fa-eye me-1"></i> View File
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -340,6 +387,80 @@ include '../includes/main/navigation.php';
             }
         });
     });
+
+    // Update the viewButton click handler
+    $(document).on('click', '.viewButton', function (e) {
+        e.preventDefault();
+        var id = $(this).attr('data-id');
+
+        $.ajax({
+            type: 'POST',
+            url: '../../controller/store/ordinanceProposal_controller.php',
+            data: {
+                'id': id,
+                'fetch_Proposal': true
+            },
+            success: function (response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                if (result.status === 'success') {
+                    $('#viewProposal').text(result.data.proposal);
+                    $('#viewProposalDate').text(new Date(result.data.proposal_date).toLocaleDateString());
+                    $('#viewDetails').text(result.data.details);
+                    $('#viewStatus').html('<span class="badge bg-' + getStatusColor(result.data.status) + '">' + result.data.status + '</span>');
+
+                    // Update file display with proper link
+                    if (result.data.file_name && result.data.file_path) {
+                        const fileIcon = getFileIconClass(result.data.file_name);
+                        $('#viewFile').html(`
+                            <div class="d-flex align-items-center">
+                                <i class="${fileIcon} me-2"></i>
+                                <span class="file-name me-2">${result.data.file_name}</span>
+                                <a href="${result.data.file_path}" class="btn btn-sm btn-primary" target="_blank">
+                                    <i class="fas fa-eye me-1"></i> View File
+                                </a>
+                            </div>
+                        `);
+                    } else {
+                        $('#viewFile').html('<span class="text-muted">No file attached</span>');
+                    }
+
+                    $('#viewProposalModal').modal('show');
+                } else {
+                    showToast(result.message || 'Failed to fetch proposal details', 'error');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Ajax Error:', error);
+                showToast('Failed to fetch proposal details', 'error');
+            }
+        });
+    });
+
+    // Add this helper function for file icons
+    function getFileIconClass(fileName) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        switch (ext) {
+            case 'pdf': return 'fas fa-file-pdf text-danger';
+            case 'doc':
+            case 'docx': return 'fas fa-file-word text-primary';
+            case 'txt': return 'fas fa-file-alt text-secondary';
+            default: return 'fas fa-file text-secondary';
+        }
+    }
+
+    function getStatusColor(status) {
+        switch (status) {
+            case 'Draft': return 'secondary';
+            case 'Under Review': return 'info';
+            case 'Pending Approval': return 'warning';
+            case 'Initial Planning': return 'primary';
+            case 'Public Comment Period': return 'dark';
+            case 'Approved': return 'success';
+            case 'Rejected': return 'danger';
+            case 'Implemented': return 'success';
+            default: return 'secondary';
+        }
+    }
 </script>
 
 <?php
