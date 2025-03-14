@@ -23,9 +23,8 @@ class Authentication
         $stmt->execute();
         $result = $stmt->get_result();
 
-        // Log login attempt (both PHP and JS)
+        // Log login attempt
         error_log("Login attempt for username: " . $username);
-        echo "<script>console.log('Login attempt for username: " . $username . "');</script>";
 
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
@@ -35,7 +34,6 @@ class Authentication
                 if (PasswordUtil::verifyPassword($password, $user['password'])) {
                     $this->setUserSession($user);
                     error_log("Login successful for user: " . $username . " with role: " . $user['role']);
-                    echo "<script>console.log('Login successful for user: " . $username . " with role: " . $user['role'] . "');</script>";
                     return true;
                 }
             } else {
@@ -46,15 +44,12 @@ class Authentication
                     $this->updatePassword($user['id'], $hashedPassword);
                     $this->setUserSession($user);
                     error_log("Login successful for user: " . $username . " with role: " . $user['role']);
-                    echo "<script>console.log('Login successful for user: " . $username . " with role: " . $user['role'] . "');</script>";
                     return true;
                 }
             }
             error_log("Invalid password for user: " . $username);
-            echo "<script>console.log('Invalid password for user: " . $username . "');</script>";
         } else {
             error_log("User not found: " . $username);
-            echo "<script>console.log('User not found: " . $username . "');</script>";
         }
         return false;
     }
@@ -103,5 +98,3 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     $auth = new Authentication();
     $auth->logout();
 }
-?>
-

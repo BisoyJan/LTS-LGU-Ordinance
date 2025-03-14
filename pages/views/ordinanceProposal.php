@@ -11,7 +11,7 @@ include '../includes/main/navigation.php';
                 <h1>Ordinance Proposal</h1>
             </div>
         </div>
-        <div class="col">
+        <div class="col-auto ml-auto">
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#proposalModal"
                     onclick="formIDChangeAdd()">

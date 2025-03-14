@@ -30,7 +30,6 @@ function hasAccess($requiredRole)
                     <i class="fas fa-user-circle me-1"></i> <?php echo htmlspecialchars($_SESSION['username']); ?>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
                     <?php if (hasAccess('admin')): ?>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
                     <?php endif; ?>
@@ -70,41 +69,47 @@ function hasAccess($requiredRole)
                 </a>
             </li>
         <?php endif; ?>
-        <li class="nav-item">
-            <a href="../views/ordinanceProposal.php" class="nav-link
+
+        <?php if (hasAccess('staff')): ?>
+            <li class="nav-item">
+                <a href="../views/ordinanceProposal.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceProposal.php' ? 'active' : ''; ?>">
-                <i class="fas fa-file-alt me-2"></i>
-                <span>Ordinance Proposal</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="../views/ordinance.php" class="nav-link
-            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinance.php' ? 'active' : ''; ?>">
-                <i class="fas fa-book me-2"></i>
-                <span>Ordinances</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="../views/schedule.php" class="nav-link
+                    <i class="fas fa-file-alt me-2"></i>
+                    <span>Ordinance Proposal</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="../views/ordinanceStatus.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceStatus.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    <span>Ordinance Status</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="../views/schedule.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'schedule.php' ? 'active' : ''; ?>">
-                <i class="fas fa-calendar-alt me-2"></i>
-                <span>Schedules</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="../views/report.php" class="nav-link
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    <span>Schedules</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="../views/report.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'report.php' ? 'active' : ''; ?>">
-                <i class="fas fa-chart-bar me-2"></i>
-                <span>Reports</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="../views/setting.php" class="nav-link
+                    <i class="fas fa-chart-bar me-2"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+        <?php endif; ?>
+
+        <?php if (hasAccess('admin')): ?>
+            <li class="nav-item">
+                <a href="../views/setting.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'setting.php' ? 'active' : ''; ?>">
-                <i class="fas fa-cog me-2"></i>
-                <span>Settings</span>
-            </a>
-        </li>
+                    <i class="fas fa-cog me-2"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+        <?php endif; ?>
     </ul>
 </div>
 
