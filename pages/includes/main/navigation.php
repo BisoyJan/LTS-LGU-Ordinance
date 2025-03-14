@@ -1,3 +1,20 @@
+<?php
+function hasAccess($requiredRole)
+{
+    $userRole = $_SESSION['role'];
+    switch ($userRole) {
+        case 'admin':
+            return true;
+        case 'staff':
+            return in_array($requiredRole, ['staff', 'viewer']);
+        case 'viewer':
+            return $requiredRole == 'viewer';
+        default:
+            return false;
+    }
+}
+?>
+
 <!-- Top Bar -->
 <nav class="navbar topbar">
     <div class="container-fluid d-flex justify-content-between align-items-center">
@@ -10,15 +27,20 @@
             <div class="dropdown">
                 <button class="btn btn-link dropdown-toggle text-decoration-none" type="button" id="userDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-user-circle me-1"></i> Admin
+                    <i class="fas fa-user-circle me-1"></i> <?php echo htmlspecialchars($_SESSION['username']); ?>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                    <?php if (hasAccess('admin')): ?>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                    <?php endif; ?>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    <li><a class="dropdown-item"
+                            href="../../controller/authentication/authentication.php?action=logout">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -39,13 +61,15 @@
                 <span>Dashboard</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a href="../views/user.php" class="nav-link
+        <?php if (hasAccess('admin')): ?>
+            <li class="nav-item">
+                <a href="../views/user.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'user.php' ? 'active' : ''; ?>">
-                <i class="fas fa-users me-2"></i>
-                <span>Users</span>
-            </a>
-        </li>
+                    <i class="fas fa-users me-2"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+        <?php endif; ?>
         <li class="nav-item">
             <a href="../views/ordinanceProposal.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceProposal.php' ? 'active' : ''; ?>">

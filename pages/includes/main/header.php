@@ -1,11 +1,19 @@
 <?php
+session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-session_start();
+
+// Check if user is logged in (except for login page)
+$current_page = basename($_SERVER['PHP_SELF']);
+if ($current_page !== 'index.php' && !isset($_SESSION['user_id'])) {
+    header("Location: ../../index.php");
+    exit();
+}
+
 if (isset($_SESSION['toast'])) {
     $message = $_SESSION['toast']['message'];
     $type = $_SESSION['toast']['type'];
-    unset($_SESSION['toast']); // Clear the session message
+    unset($_SESSION['toast']);
     echo "showToast('$message', '$type');";
 }
 ?>
@@ -21,12 +29,6 @@ if (isset($_SESSION['toast'])) {
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- <link rel="stylesheet" href="../../assets/css/datatables.css">
-
-    <script src="../../assets/js/datatables.js"></script>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
 
     <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/moment-2.29.4/dt-2.2.2/datatables.min.css" rel="stylesheet"
         integrity="sha384-/z1ZDMqmsYaq/NXh/ETpYUT4UDsfsPzi8Pezq/UyJYIvmAF7g5QBXJbuCIIMxPGl" crossorigin="anonymous">

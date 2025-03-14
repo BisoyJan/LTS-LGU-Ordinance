@@ -71,7 +71,8 @@ include('../includes/main/navigation.php');
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role" required>
                             <option value="">Select Role</option>
-                            <option value="admin">Admin</option>
+                            <option value="legislator">Legislator</option>
+                            <option value="admin">Administrator</option>
                             <option value="user">User</option>
                         </select>
                         <div class="invalid-feedback">

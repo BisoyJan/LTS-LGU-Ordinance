@@ -1,3 +1,21 @@
+<?php
+session_start();
+require_once __DIR__ . '/controller/authentication/authentication.php';
+require_once 'config/database.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $auth = new Authentication();
+    if ($auth->login($_POST['username'], $_POST['password'])) {
+        header("Location: pages/views/dashboard.php");
+        exit();
+    } else {
+        $_SESSION['toast'] = [
+            'message' => 'Invalid username or password',
+            'type' => 'error'
+        ];
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,6 +49,12 @@
 
                         <form action="" method="POST">
                             <div class="mb-3">
+                                <?php
+                                if (isset($_SESSION['toast'])) {
+                                    echo '<div class="alert alert-danger">' . $_SESSION['toast']['message'] . '</div>';
+                                    unset($_SESSION['toast']);
+                                }
+                                ?>
                                 <label for="username" class="form-label fw-semibold">Username</label>
                                 <input type="text" class="form-control" id="username" name="username"
                                     placeholder="Enter your username">
@@ -47,17 +71,19 @@
                                     <input type="checkbox" class="form-check-input" id="remember">
                                     <label class="form-check-label text-muted" for="remember">Remember me</label>
                                 </div>
-                                <a href="#" class="text-decoration-none">Forgot password?</a>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100">
-                                Sign In
-                            </button>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    Sign In
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Bootstrap JS Bundle with Popper -->

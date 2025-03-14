@@ -148,7 +148,7 @@ function getFileIcon($fileType)
 }
 
 // Function to truncate text
-function truncateText($text, $limit = 20)
+function truncateText($text, $limit)
 {
     $words = explode(' ', $text);
     if (count($words) > $limit) {
