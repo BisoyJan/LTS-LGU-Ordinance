@@ -1,6 +1,7 @@
 <?php
 
 require '../../database/db.php';
+require_once '../../utils/password.php';
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -34,7 +35,7 @@ if (isset($_POST['fetch_User'])) {
 if (isset($_POST['create_User'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
+    $password = PasswordUtil::hashPassword($_POST['password']); // Hash before escaping
     $role = mysqli_real_escape_string($conn, $_POST['role']);
 
     $sql = "INSERT INTO users (username, email, password, role) VALUES ('$username', '$email', '$password', '$role')";
@@ -71,7 +72,15 @@ if (isset($_POST['update_User'])) {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $role = mysqli_real_escape_string($conn, $_POST['role']);
 
-    $sql = "UPDATE users SET username = '$username', email = '$email', role = '$role' WHERE id = '$id'";
+    $sql = "UPDATE users SET username = '$username', email = '$email', role = '$role'";
+
+    // Add password update only if a new password is provided
+    if (!empty($_POST['password'])) {
+        $password = PasswordUtil::hashPassword($_POST['password']);
+        $sql .= ", password = '$password'";
+    }
+
+    $sql .= " WHERE id = '$id'";
 
     try {
         $conn->query($sql);
