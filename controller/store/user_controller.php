@@ -1,11 +1,11 @@
 <?php
-
-require '../../database/db.php';
+require '../../database/database.php';
 require_once '../../utils/password.php';
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+$conn = getConnection();
 
 if (isset($_POST['fetch_User'])) {
     $user_id = mysqli_real_escape_string($conn, $_POST['id']);

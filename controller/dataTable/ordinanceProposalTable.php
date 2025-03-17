@@ -1,8 +1,10 @@
 <?php
-require '../../database/db.php';
+require '../../database/database.php';
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
+
+$conn = getConnection();
 
 $output = array();
 $columns = array("id", "proposal", "proposal_date", "details", "status", "file_name");

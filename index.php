@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/controller/authentication/authentication.php';
-require_once 'config/database.php';
+require_once 'database/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $auth = new Authentication();

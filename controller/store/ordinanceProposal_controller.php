@@ -1,8 +1,9 @@
 <?php
-
-require '../../database/db.php';
+require '../../database/database.php';
 
 header('Content-Type: application/json');
+
+$conn = getConnection();
 
 if (isset($_POST['fetch_Proposal'])) {
     $proposal_id = mysqli_real_escape_string($conn, $_POST['id']);
