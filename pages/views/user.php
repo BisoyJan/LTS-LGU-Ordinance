@@ -4,10 +4,10 @@ include('../includes/main/navigation.php');
 ?>
 
 <div class="container-fluid">
-    <div class="row mb-3">
+    <div class="row mb-2">
         <div class="col-auto">
             <div class="mb-3">
-                <h1>User Management</h1>
+                <h2>User Management</h2>
             </div>
         </div>
         <div class="col">
@@ -73,6 +73,7 @@ include('../includes/main/navigation.php');
                             <option value="">Select Role</option>
                             <option value="legislator">Legislator</option>
                             <option value="admin">Administrator</option>
+                            <option value="committee">Committee</option>
                             <option value="user">User</option>
                         </select>
                         <div class="invalid-feedback">

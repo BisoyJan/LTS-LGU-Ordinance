@@ -1,5 +1,41 @@
 <?php
 require '../../database/database.php';
+require_once '../../vendor/autoload.php'; // Add this for Google API client
+
+use Google\Client;
+use Google\Service\Drive;
+
+function getGoogleDriveClient()
+{
+    $credentialsPath = '../../api/credentials.json';
+
+    if (!file_exists($credentialsPath)) {
+        throw new Exception('Credentials file not found');
+    }
+
+    $jsonContent = file_get_contents($credentialsPath);
+    if ($jsonContent === false) {
+        throw new Exception('Failed to read credentials file');
+    }
+
+    $credentials = json_decode($jsonContent, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Invalid JSON in credentials file: ' . json_last_error_msg());
+    }
+
+    if (!isset($credentials['client_email']) || !isset($credentials['private_key'])) {
+        throw new Exception('Credentials file missing required fields');
+    }
+
+    $credentials['type'] = 'service_account';
+
+    $client = new Client();
+    $client->setApplicationName('LTS-LGU-Ordinance');
+    $client->setAuthConfig($credentials);
+    $client->setScopes([Drive::DRIVE_FILE]);
+
+    return $client;
+}
 
 header('Content-Type: application/json');
 
@@ -38,47 +74,50 @@ if (isset($_POST['create_ordinanceProposal'])) {
         $status = mysqli_real_escape_string($conn, $_POST['status']);
 
         // Handle file upload if present
-        $fileDestination = null;
-        $fileNameNew = null;
-        $fileTypeEnum = null;
-        $fileSizeBytes = 0;
+        $driveFileId = null;
+        $fileName = null;
+        $fileType = null;
+        $fileSize = 0;
 
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
+
+            // Validate file type
+            $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($fileExt, ['doc', 'docx'])) {
+                throw new Exception('Only .doc and .docx files are allowed');
+            }
+
             if ($file['error'] !== UPLOAD_ERR_OK) {
                 throw new Exception('File upload failed with error code: ' . $file['error']);
             }
 
+            // Upload to Google Drive
+            $client = getGoogleDriveClient();
+            $driveService = new Drive($client);
+
+            $fileMetadata = new Drive\DriveFile([
+                'name' => $file['name'],
+                'parents' => ['15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj'] // Replace with your folder ID
+            ]);
+
+            $content = file_get_contents($file['tmp_name']);
+            $driveFile = $driveService->files->create($fileMetadata, [
+                'data' => $content,
+                'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'uploadType' => 'multipart',
+                'fields' => 'id'
+            ]);
+
+            $driveFileId = $driveFile->id;
             $fileName = $file['name'];
-            $fileTmpName = $file['tmp_name'];
+            $fileType = $fileExt;
             $fileSize = $file['size'];
-            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-            // Check if file with same name exists in database
-            $checkQuery = "SELECT file_name FROM ordinance_proposals WHERE file_name = '$fileName'";
-            $result = $conn->query($checkQuery);
-
-            if ($result && $result->num_rows > 0) {
-                throw new Exception('A file with the same name already exists. Please rename your file.');
-            }
-
-            $uploadDir = '../../assets/file/ordinance_proposals/';
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-
-            $fileDestination = $uploadDir . $fileName;
-
-            if (!move_uploaded_file($fileTmpName, $fileDestination)) {
-                throw new Exception('Failed to move uploaded file');
-            }
-
-            $fileTypeEnum = $fileExt;
-            $fileSizeBytes = $fileSize;
         }
 
         // Insert query
-        $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, status, file_name, file_path, file_type, file_size) VALUES ('$proposal', '$proposalDate', '$details', '$status', '$fileName', '$fileDestination', '$fileTypeEnum', $fileSizeBytes)";
+        $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, status, file_name, file_path, file_type, file_size) 
+                  VALUES ('$proposal', '$proposalDate', '$details', '$status', '$fileName', '$driveFileId', '$fileType', $fileSize)";
 
         if ($conn->query($query)) {
             $response = array(
@@ -116,36 +155,42 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
 
-            // Check if uploaded file is different from existing file
-            if ($existingFile['file_name'] !== $file['name']) {
-                if ($file['error'] !== UPLOAD_ERR_OK) {
-                    throw new Exception('File upload failed with error code: ' . $file['error']);
-                }
-
-                $fileName = $file['name'];
-                $fileTmpName = $file['tmp_name'];
-                $fileSize = $file['size'];
-                $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-                // Delete existing file if it exists
-                if ($existingFile['file_path'] && file_exists($existingFile['file_path'])) {
-                    unlink($existingFile['file_path']);
-                }
-
-                $uploadDir = '../../assets/file/ordinance_proposals/';
-                if (!file_exists($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-
-                $fileDestination = $uploadDir . $fileName;
-
-                if (!move_uploaded_file($fileTmpName, $fileDestination)) {
-                    throw new Exception('Failed to move uploaded file');
-                }
-
-                $fileUpdate = ", file_name = '$fileName', file_path = '$fileDestination', 
-                              file_type = '$fileExt', file_size = $fileSize";
+            // Validate file type
+            $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($fileExt, ['doc', 'docx'])) {
+                throw new Exception('Only .doc and .docx files are allowed');
             }
+
+            // Delete existing file from Google Drive if exists
+            if ($existingFile['file_path']) {
+                $client = getGoogleDriveClient();
+                $driveService = new Drive($client);
+                try {
+                    $driveService->files->delete($existingFile['file_path']);
+                } catch (Exception $e) {
+                    error_log("Failed to delete file from Google Drive: " . $e->getMessage());
+                }
+            }
+
+            // Upload new file to Google Drive
+            $client = getGoogleDriveClient();
+            $driveService = new Drive($client);
+
+            $fileMetadata = new Drive\DriveFile([
+                'name' => $file['name'],
+                'parents' => ['15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj'] // Replace with your folder ID
+            ]);
+
+            $content = file_get_contents($file['tmp_name']);
+            $driveFile = $driveService->files->create($fileMetadata, [
+                'data' => $content,
+                'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'uploadType' => 'multipart',
+                'fields' => 'id'
+            ]);
+
+            $fileUpdate = ", file_name = '{$file['name']}', file_path = '{$driveFile->id}', 
+                           file_type = '$fileExt', file_size = {$file['size']}";
         }
 
         // Update query
@@ -197,9 +242,13 @@ if (isset($_POST['delete_ordinanceProposal'])) {
         $existingFile = $fileResult->fetch_assoc();
 
         // Only attempt file deletion if we have a valid file path
-        if ($existingFile && !empty($existingFile['file_path']) && file_exists($existingFile['file_path'])) {
-            if (!unlink($existingFile['file_path'])) {
-                error_log("Failed to delete file: " . $existingFile['file_path']);
+        if ($existingFile && !empty($existingFile['file_path'])) {
+            $client = getGoogleDriveClient();
+            $driveService = new Drive($client);
+            try {
+                $driveService->files->delete($existingFile['file_path']);
+            } catch (Exception $e) {
+                error_log("Failed to delete file from Google Drive: " . $e->getMessage());
             }
         }
 

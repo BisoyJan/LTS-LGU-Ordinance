@@ -4,14 +4,14 @@ include '../includes/main/navigation.php';
 ?>
 
 
-<div class="container-fluid px-6 py-4">
-    <div class="row mb-3">
+<div class="container-fluid">
+    <div class="row mb-2">
         <div class="col-auto">
             <div class="mb-3">
-                <h1>Ordinance Proposal</h1>
+                <h2>Ordinance Proposal</h2>
             </div>
         </div>
-        <div class="col-auto ml-auto">
+        <div class="col">
             <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#proposalModal"
                     onclick="formIDChangeAdd()">
@@ -408,15 +408,16 @@ include '../includes/main/navigation.php';
                     $('#viewDetails').text(result.data.details);
                     $('#viewStatus').html('<span class="badge bg-' + getStatusColor(result.data.status) + '">' + result.data.status + '</span>');
 
-                    // Update file display with proper link
+                    // Update file display with Google Docs viewer
                     if (result.data.file_name && result.data.file_path) {
                         const fileIcon = getFileIconClass(result.data.file_name);
+                        const googleDocsUrl = "https://docs.google.com/document/d/" + result.data.file_path + "/preview";
                         $('#viewFile').html(`
                             <div class="d-flex align-items-center">
                                 <i class="${fileIcon} me-2"></i>
                                 <span class="file-name me-2">${result.data.file_name}</span>
-                                <a href="${result.data.file_path}" class="btn btn-sm btn-primary" target="_blank">
-                                    <i class="fas fa-eye me-1"></i> View File
+                                <a href="${googleDocsUrl}" class="btn btn-sm btn-primary" target="_blank">
+                                    <i class="fas fa-eye me-1"></i> View in Google Docs
                                 </a>
                             </div>
                         `);

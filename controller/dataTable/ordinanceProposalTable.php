@@ -60,36 +60,29 @@ $data = array();
 while ($row = mysqli_fetch_assoc($query)) {
     $formatted_date = date('M d, Y', strtotime($row['proposal_date']));
 
-    // File attachment display
-    $file_html = '';
-    if (!empty($row['file_name'])) {
-        $file_size_formatted = formatFileSize($row['file_size']);
-        $file_icon = getFileIcon($row['file_type']);
-        $file_html = "<div class='file-attachment'>
-                        <span class='file-icon'>{$file_icon}</span>
-                        <a href='{$row['file_path']}' target='_blank' title='Download {$row['file_name']}'>
-                            {$row['file_name']} ({$file_size_formatted})
-                        </a>
-                      </div>";
-    } else {
-        $file_html = "<span class='text-muted'>No file attached</span>";
+    // Create Google Docs viewer URL
+    $googleDocsUrl = '';
+    if (!empty($row['file_path'])) {
+        $driveFileId = $row['file_path'];
+        $googleDocsUrl = "https://docs.google.com/document/d/" . $driveFileId . "/preview";
     }
 
     $data[] = [
         htmlspecialchars($row['id']),
         htmlspecialchars($row['proposal']),
         htmlspecialchars($formatted_date),
-        truncateText(htmlspecialchars($row["details"]), 6),  // Truncate details to 20 words
+        truncateText(htmlspecialchars($row["details"]), 6),
         '<span class="badge bg-' . getStatusColor($row['status']) . '">' . htmlspecialchars($row['status']) . '</span>',
         '<div class="file-attachment">
             <span class="file-icon">' . getFileIcon($row['file_type']) . '</span>
-            <a href="' . htmlspecialchars($row['file_path']) . '" target="_blank" class="file-link" data-path="' . htmlspecialchars($row['file_path']) . '">
-                ' . htmlspecialchars($row['file_name']) . ' (' . formatFileSize($row['file_size']) . ')
-            </a>
+            ' . (!empty($row['file_name']) ? '
+                <a href="' . $googleDocsUrl . '" target="_blank" class="file-link">
+                    ' . htmlspecialchars($row['file_name']) . ' (' . formatFileSize($row['file_size']) . ')
+                </a>' : '<span class="text-muted">No file attached</span>') . '
         </div>',
         '<button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewProposalModal"><i class="fas fa-eye"></i></button>
         <button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#proposalModal"><i class="fas fa-edit"></i></button>
-        <button class="viewFileButton btn btn-info btn-sm ms-1" data-id="' . $row["id"] . '" ' . (empty($row['file_path']) ? 'disabled' : '') . ' onclick="viewFile(\'' . $row['file_path'] . '\')" type="button"><i class="fas fa-file-alt"></i></button>
+        <button class="viewFileButton btn btn-info btn-sm ms-1" data-id="' . $row["id"] . '" ' . (empty($row['file_path']) ? 'disabled' : '') . ' onclick="viewFile(\'' . $googleDocsUrl . '\')" type="button"><i class="fas fa-file-alt"></i></button>
         <button class="deleteButton btn btn-danger btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#proposalDeleteModal"><i class="fas fa-trash"></i></button>'
     ];
 }

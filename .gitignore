@@ -1,2 +1,5 @@
 #Ignoring the ordinance_proposal directory
 assets/file/ordinance_proposals
+vendor
+node_modules
+api/credentials.json
