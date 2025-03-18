@@ -44,7 +44,7 @@ $conn = getConnection();
 if (isset($_POST['fetch_Proposal'])) {
     $proposal_id = mysqli_real_escape_string($conn, $_POST['id']);
 
-    $sql = "SELECT id, proposal, proposal_date, details, status, file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
+    $sql = "SELECT id, proposal, proposal_date, details, file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
 
     $query_run = mysqli_query($conn, $sql);
 
@@ -151,7 +151,7 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         $proposal = mysqli_real_escape_string($conn, $_POST['proposal']);
         $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
         $details = mysqli_real_escape_string($conn, $_POST['details']);
-        $status = mysqli_real_escape_string($conn, $_POST['status']);
+
 
         // Get existing file information
         $fileQuery = "SELECT file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
@@ -208,8 +208,7 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         $query = "UPDATE ordinance_proposals 
                  SET proposal = '$proposal', 
                      proposal_date = '$proposalDate', 
-                     details = '$details', 
-                     status = '$status' 
+                     details = '$details',
                      $fileUpdate 
                  WHERE id = '$proposal_id'";
 

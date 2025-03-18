@@ -7,11 +7,13 @@ error_reporting(E_ALL);
 $conn = getConnection();
 
 $output = array();
-$columns = array("id", "proposal", "proposal_date", "details", "status", "file_name");
+$columns = array("id", "proposal", "proposal_date", "details", "file_name"); // Removed status
 $search_value = isset($_POST['search']['value']) ? trim($_POST['search']['value']) : "";
 
-// Base Query
-$sql = "SELECT id, proposal, proposal_date, details, status, file_name, file_path, file_type, file_size, created_at FROM ordinance_proposals";
+// Base Query without status
+$sql = "SELECT id, proposal, proposal_date, details, file_name, file_path, 
+        file_type, file_size, created_at 
+        FROM ordinance_proposals";
 $totalQuery = mysqli_query($conn, $sql);
 $total_all_rows = mysqli_num_rows($totalQuery);
 
@@ -19,7 +21,9 @@ $total_all_rows = mysqli_num_rows($totalQuery);
 $whereClause = "";
 if (!empty($search_value)) {
     $search_value = mysqli_real_escape_string($conn, $search_value);
-    $whereClause = " WHERE proposal LIKE '%$search_value%' OR details LIKE '%$search_value%' OR status LIKE '%$search_value%' OR file_name LIKE '%$search_value%'";
+    $whereClause = " WHERE proposal LIKE '%$search_value%' 
+                     OR details LIKE '%$search_value%' 
+                     OR file_name LIKE '%$search_value%'";
 }
 
 // Sorting
@@ -72,7 +76,6 @@ while ($row = mysqli_fetch_assoc($query)) {
         htmlspecialchars($row['proposal']),
         htmlspecialchars($formatted_date),
         truncateText(htmlspecialchars($row["details"]), 6),
-        '<span class="badge bg-' . getStatusColor($row['status']) . '">' . htmlspecialchars($row['status']) . '</span>',
         '<div class="file-attachment">
             <span class="file-icon">' . getFileIcon($row['file_type']) . '</span>
             ' . (!empty($row['file_name']) ? '
@@ -88,31 +91,6 @@ while ($row = mysqli_fetch_assoc($query)) {
         
         <button class="deleteButton btn btn-danger btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#proposalDeleteModal"><i class="fas fa-trash"></i></button>'
     ];
-}
-
-// Function to get Bootstrap color class based on status
-function getStatusColor($status)
-{
-    switch ($status) {
-        case 'Draft':
-            return 'secondary';
-        case 'Under Review':
-            return 'info';
-        case 'Pending Approval':
-            return 'warning';
-        case 'Initial Planning':
-            return 'primary';
-        case 'Public Comment Period':
-            return 'dark';
-        case 'Approved':
-            return 'success';
-        case 'Rejected':
-            return 'danger';
-        case 'Implemented':
-            return 'success';
-        default:
-            return 'secondary';
-    }
 }
 
 // Function to format file size

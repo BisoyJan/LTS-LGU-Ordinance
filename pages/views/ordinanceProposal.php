@@ -28,7 +28,6 @@ include '../includes/main/navigation.php';
                 <th>Proposal</th>
                 <th>Date</th>
                 <th>Details</th>
-                <th>Status</th>
                 <th>File</th>
                 <th>Actions</th>
             </tr>
@@ -65,23 +64,6 @@ include '../includes/main/navigation.php';
                             <textarea class="form-control" id="details" name="details" rows="3" required></textarea>
                             <div class="invalid-feedback">
                                 Please provide proposal details.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="">Select status</option>
-                                <option value="Draft">Draft</option>
-                                <option value="Under Review">Under Review</option>
-                                <option value="Pending Approval">Pending Approval</option>
-                                <option value="Initial Planning">Initial Planning</option>
-                                <option value="Public Comment Period">Public Comment Period</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Rejected">Rejected</option>
-                                <option value="Implemented">Implemented</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Please select a status.
                             </div>
                         </div>
                         <div class="mb-3">
@@ -147,10 +129,6 @@ include '../includes/main/navigation.php';
                         <div class="col-md-9" id="viewDetails"></div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-3 fw-bold">Status:</div>
-                        <div class="col-md-9" id="viewStatus"></div>
-                    </div>
-                    <div class="row mb-3">
                         <div class="col-md-3 fw-bold">File:</div>
                         <div class="col-md-9">
                             <div id="viewFile" class="d-flex align-items-center">
@@ -187,13 +165,14 @@ include '../includes/main/navigation.php';
                         <label for="action_type" class="form-label">Action Type</label>
                         <select class="form-select" id="action_type" name="action_type" required>
                             <option value="">Select action</option>
-                            <option value="Create">Create</option>
-                            <option value="Update">Update</option>
-                            <option value="Review">Review</option>
-                            <option value="Approve">Approve</option>
-                            <option value="Reject">Reject</option>
-                            <option value="Implement">Implement</option>
-                            <option value="Comment">Comment</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Pending Approval">Pending Approval</option>
+                            <option value="Initial Planning">Initial Planning</option>
+                            <option value="Public Comment Period">Public Comment Period</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Implemented">Implemented</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -230,7 +209,6 @@ include '../includes/main/navigation.php';
                 { "title": "Proposal" },
                 { "title": "Date" },
                 { "title": "Details" },
-                { "title": "Status" },
                 { "title": "File", "orderable": true },
                 { "title": "Actions", "orderable": false }
             ],
@@ -239,9 +217,8 @@ include '../includes/main/navigation.php';
                 { "width": "15%", "targets": 1 },
                 { "width": "10%", "targets": 2 },
                 { "width": "25%", "targets": 3 },
-                { "width": "10%", "targets": 4 },
-                { "width": "15%", "targets": 5 },
-                { "width": "20%", "targets": 6 }
+                { "width": "15%", "targets": 4 },
+                { "width": "20%", "targets": 5 }
             ],
             "serverSide": true,
             "processing": true,
@@ -339,7 +316,6 @@ include '../includes/main/navigation.php';
                     $('#proposal').val(response.data.proposal);
                     $('#proposalDate').val(response.data.proposal_date);
                     $('#details').val(response.data.details);
-                    $('#status').val(response.data.status);
                     $('#file').val(response)
                 } else {
                     showToast(response.message, 'danger');
@@ -457,7 +433,6 @@ include '../includes/main/navigation.php';
                     $('#viewProposal').text(result.data.proposal);
                     $('#viewProposalDate').text(new Date(result.data.proposal_date).toLocaleDateString());
                     $('#viewDetails').text(result.data.details);
-                    $('#viewStatus').html('<span class="badge bg-' + getStatusColor(result.data.status) + '">' + result.data.status + '</span>');
 
                     // Update file display with Google Docs viewer
                     if (result.data.file_name && result.data.file_path) {

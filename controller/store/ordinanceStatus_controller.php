@@ -102,11 +102,6 @@ if (isset($_POST['add_status'])) {
         $stmt->bind_param("iiss", $proposal_id, $user_id, $remarks, $action_type);
 
         if ($stmt->execute()) {
-            // Update the proposal status in ordinance_proposals table
-            $update_proposal = "UPDATE ordinance_proposals SET status = ? WHERE id = ?";
-            $stmt = $conn->prepare($update_proposal);
-            $stmt->bind_param("si", $action_type, $proposal_id);
-            $stmt->execute();
 
             echo json_encode([
                 'status' => 'success',
