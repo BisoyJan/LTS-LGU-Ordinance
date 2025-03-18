@@ -33,9 +33,14 @@ if (isset($_SESSION['toast'])) {
     <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/moment-2.29.4/dt-2.2.2/datatables.min.css" rel="stylesheet"
         integrity="sha384-/z1ZDMqmsYaq/NXh/ETpYUT4UDsfsPzi8Pezq/UyJYIvmAF7g5QBXJbuCIIMxPGl" crossorigin="anonymous">
 
+    <!-- Add SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/moment-2.29.4/dt-2.2.2/datatables.min.js"
         integrity="sha384-NuKovNwZ/4OQ6larI9ZRGjjGQZCUJAkvHYHiUGgz3EMMM4Is9tRCgTC12V9ci5Sp"
         crossorigin="anonymous"></script>
+    <!-- Add SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
     <script>
@@ -104,7 +109,6 @@ if (isset($_SESSION['toast'])) {
         }
 
     </script>
-
 
     <style>
         body {

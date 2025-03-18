@@ -68,6 +68,11 @@ if (isset($_POST['fetch_Proposal'])) {
 
 if (isset($_POST['create_ordinanceProposal'])) {
     try {
+        // Get next ID from database
+        $nextIdQuery = "SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ordinance_proposals'";
+        $nextIdResult = $conn->query($nextIdQuery);
+        $nextId = $nextIdResult->fetch_assoc()['AUTO_INCREMENT'];
+
         $proposal = mysqli_real_escape_string($conn, $_POST['proposal']);
         $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
         $details = mysqli_real_escape_string($conn, $_POST['details']);
@@ -82,8 +87,11 @@ if (isset($_POST['create_ordinanceProposal'])) {
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
 
-            // Validate file type
+            // Add ID to filename
             $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
+            $newFileName = $nextId . '_' . $baseFileName . '.' . $fileExt;
+
             if (!in_array($fileExt, ['doc', 'docx'])) {
                 throw new Exception('Only .doc and .docx files are allowed');
             }
@@ -92,12 +100,12 @@ if (isset($_POST['create_ordinanceProposal'])) {
                 throw new Exception('File upload failed with error code: ' . $file['error']);
             }
 
-            // Upload to Google Drive
+            // Upload to Google Drive with new filename
             $client = getGoogleDriveClient();
             $driveService = new Drive($client);
 
             $fileMetadata = new Drive\DriveFile([
-                'name' => $file['name'],
+                'name' => $newFileName,
                 'parents' => ['15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj'] // Replace with your folder ID
             ]);
 
@@ -110,7 +118,7 @@ if (isset($_POST['create_ordinanceProposal'])) {
             ]);
 
             $driveFileId = $driveFile->id;
-            $fileName = $file['name'];
+            $fileName = $newFileName;
             $fileType = $fileExt;
             $fileSize = $file['size'];
         }
@@ -155,8 +163,11 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
 
-            // Validate file type
+            // Add existing ID to filename
             $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
+            $newFileName = $proposal_id . '_' . $baseFileName . '.' . $fileExt;
+
             if (!in_array($fileExt, ['doc', 'docx'])) {
                 throw new Exception('Only .doc and .docx files are allowed');
             }
@@ -172,12 +183,12 @@ if (isset($_POST['edit_ordinanceProposal'])) {
                 }
             }
 
-            // Upload new file to Google Drive
+            // Upload new file to Google Drive with new filename
             $client = getGoogleDriveClient();
             $driveService = new Drive($client);
 
             $fileMetadata = new Drive\DriveFile([
-                'name' => $file['name'],
+                'name' => $newFileName,
                 'parents' => ['15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj'] // Replace with your folder ID
             ]);
 
@@ -189,7 +200,7 @@ if (isset($_POST['edit_ordinanceProposal'])) {
                 'fields' => 'id'
             ]);
 
-            $fileUpdate = ", file_name = '{$file['name']}', file_path = '{$driveFile->id}', 
+            $fileUpdate = ", file_name = '{$newFileName}', file_path = '{$driveFile->id}', 
                            file_type = '$fileExt', file_size = {$file['size']}";
         }
 

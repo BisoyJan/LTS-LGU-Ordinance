@@ -83,6 +83,9 @@ while ($row = mysqli_fetch_assoc($query)) {
         '<button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewProposalModal"><i class="fas fa-eye"></i></button>
         <button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#proposalModal"><i class="fas fa-edit"></i></button>
         <button class="viewFileButton btn btn-info btn-sm ms-1" data-id="' . $row["id"] . '" ' . (empty($row['file_path']) ? 'disabled' : '') . ' onclick="viewFile(\'' . $googleDocsUrl . '\')" type="button"><i class="fas fa-file-alt"></i></button>
+
+        <button class="btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#proposalStatusModal"><i class="fas fa-pen"></i></button>
+        
         <button class="deleteButton btn btn-danger btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#proposalDeleteModal"><i class="fas fa-trash"></i></button>'
     ];
 }
@@ -129,17 +132,10 @@ function formatFileSize($bytes)
 // Function to get file icon based on file type
 function getFileIcon($fileType)
 {
-    switch ($fileType) {
-        case 'pdf':
-            return '<i class="fas fa-file-pdf text-danger"></i>';
-        case 'doc':
-        case 'docx':
-            return '<i class="fas fa-file-word text-primary"></i>';
-        case 'txt':
-            return '<i class="fas fa-file-alt text-secondary"></i>';
-        default:
-            return '<i class="fas fa-file text-secondary"></i>';
+    if ($fileType === 'doc' || $fileType === 'docx') {
+        return '<i class="fas fa-file-word text-primary"></i>';
     }
+    return '<i class="fas fa-file text-secondary"></i>';
 }
 
 // Function to truncate text

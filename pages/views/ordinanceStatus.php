@@ -18,6 +18,21 @@ include('../includes/main/navigation.php');
                 </button>
             </div>
         </div> -->
+
+        <table id="ordinanceStatusTable" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Ordinance Number</th>
+                    <th>Ordinance Title</th>
+                    <th>Ordinance Date</th>
+                    <th>Ordinance Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+
+        </table>
     </div>
 
 

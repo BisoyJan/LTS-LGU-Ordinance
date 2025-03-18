@@ -171,6 +171,45 @@ include '../includes/main/navigation.php';
 
 </div>
 
+<!-- Add Status Modal -->
+<div class="modal fade" id="proposalStatusModal" tabindex="-1" aria-labelledby="proposalStatusModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="proposalStatusModalLabel">Update Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="statusForm">
+                <div class="modal-body">
+                    <input type="hidden" id="statusProposalId" name="proposal_id">
+                    <div class="mb-3">
+                        <label for="action_type" class="form-label">Action Type</label>
+                        <select class="form-select" id="action_type" name="action_type" required>
+                            <option value="">Select action</option>
+                            <option value="Create">Create</option>
+                            <option value="Update">Update</option>
+                            <option value="Review">Review</option>
+                            <option value="Approve">Approve</option>
+                            <option value="Reject">Reject</option>
+                            <option value="Implement">Implement</option>
+                            <option value="Comment">Comment</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     $(document).ready(function () {
         $('#ordinanceProposalsTable').DataTable({
@@ -217,6 +256,7 @@ include '../includes/main/navigation.php';
         });
     });
 
+
     // Function to view file in new window or tab
     function viewFile(filePath) {
         if (filePath) {
@@ -243,6 +283,8 @@ include '../includes/main/navigation.php';
         var formData = new FormData(this);
         formData.append('create_ordinanceProposal', true);
 
+        showLoading(); // Show loading animation
+
         $.ajax({
             url: '../../controller/store/ordinanceProposal_controller.php',
             type: 'POST',
@@ -251,6 +293,7 @@ include '../includes/main/navigation.php';
             contentType: false,
             processData: false,
             success: function (response) {
+                hideLoading(); // Hide loading animation
                 try {
                     // Parse the response if it's a string
                     const result = typeof response === 'string' ? JSON.parse(response) : response;
@@ -269,6 +312,7 @@ include '../includes/main/navigation.php';
                 }
             },
             error: function (xhr, status, error) {
+                hideLoading(); // Hide loading animation
                 console.error('Ajax Error:', status, error);
                 showToast(error, 'error');
             }
@@ -313,6 +357,8 @@ include '../includes/main/navigation.php';
         var formData = new FormData(this);
         formData.append('edit_ordinanceProposal', true);
 
+        showLoading(); // Show loading animation
+
         $.ajax({
             url: '../../controller/store/ordinanceProposal_controller.php',
             type: 'POST',
@@ -321,6 +367,7 @@ include '../includes/main/navigation.php';
             contentType: false,
             processData: false,
             success: function (response) {
+                hideLoading(); // Hide loading animation
                 try {
                     // Parse the response if it's a string
                     const result = typeof response === 'string' ? JSON.parse(response) : response;
@@ -339,6 +386,7 @@ include '../includes/main/navigation.php';
                 }
             },
             error: function (xhr, status, error) {
+                hideLoading(); // Hide loading animation
                 console.error('Ajax Error:', status, error);
                 showToast(error, 'error');
             }
@@ -358,6 +406,8 @@ include '../includes/main/navigation.php';
         var formData = new FormData(this);
         formData.append('delete_ordinanceProposal', true);
 
+        showLoading(); // Show loading animation
+
         $.ajax({
             type: 'POST',
             url: '../../controller/store/ordinanceProposal_controller.php',
@@ -365,6 +415,7 @@ include '../includes/main/navigation.php';
             contentType: false,
             processData: false,
             success: function (response) {
+                hideLoading(); // Hide loading animation
                 try {
                     // Parse the response if it's a string
                     const result = typeof response === 'string' ? JSON.parse(response) : response;
@@ -437,14 +488,88 @@ include '../includes/main/navigation.php';
         });
     });
 
+    $(document).on('click', '[data-bs-target="#proposalStatusModal"]', function (e) {
+        e.preventDefault(); // Prevent default action
+        e.stopPropagation(); // Stop event propagation
+
+        const proposalId = $(this).data('id');
+
+        // Check status before showing modal
+        $.ajax({
+            url: '../../controller/store/ordinanceStatus_controller.php',
+            type: 'POST',
+            data: {
+                check_status: true,
+                proposal_id: proposalId
+            },
+            success: function (response) {
+                try {
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (!result.exists) {
+                        if (result.status === 'error') {
+                            showToast(result.message, 'error');
+                            return;
+                        }
+                        $('#statusProposalId').val(proposalId);
+                        $('#proposalStatusModal').modal('show');
+                    } else {
+                        // Show detailed information about existing status
+                        const statusInfo = `Status: ${result.data.action_type}\n` +
+                            `Remarks: ${result.data.remarks}\n` +
+                            `Added by: ${result.data.added_by}\n` +
+                            `Date: ${new Date(result.data.added_on).toLocaleString()}`;
+
+                        Swal.fire({
+                            title: 'Status Already Exists',
+                            html: statusInfo.replace(/\n/g, '<br>'),
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    showToast('Error checking status', 'error');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Ajax Error:', error);
+                showToast('Error checking status', 'error');
+            }
+        });
+    });
+
+    // Add this new event handler for the status form submission
+    $(document).on('submit', '#statusForm', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        formData.append('add_status', true);
+
+        $.ajax({
+            url: '../../controller/store/ordinanceStatus_controller.php',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                $('#proposalStatusModal').modal('hide');
+                showToast(result.message, result.status);
+                if (result.status === 'success') {
+                    $('#ordinanceProposalsTable').DataTable().draw();
+                }
+            },
+            error: function (xhr, status, error) {
+                showToast('Error updating status', 'error');
+            }
+        });
+    });
+
     // Add this helper function for file icons
     function getFileIconClass(fileName) {
         const ext = fileName.split('.').pop().toLowerCase();
         switch (ext) {
-            case 'pdf': return 'fas fa-file-pdf text-danger';
             case 'doc':
             case 'docx': return 'fas fa-file-word text-primary';
-            case 'txt': return 'fas fa-file-alt text-secondary';
             default: return 'fas fa-file text-secondary';
         }
     }

@@ -1,6 +1,23 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+
+    // Add this at the beginning
+    function showLoading() {
+        Swal.fire({
+            title: 'Processing...',
+            html: 'Please wait...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function hideLoading() {
+        Swal.close();
+    }
+
     // Toggle sidebar on mobile
     document.querySelector('.toggle-btn').addEventListener('click', function () {
         document.querySelector('.sidebar').classList.toggle('active');
