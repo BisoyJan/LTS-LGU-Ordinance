@@ -76,7 +76,6 @@ if (isset($_POST['create_ordinanceProposal'])) {
         $proposal = mysqli_real_escape_string($conn, $_POST['proposal']);
         $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
         $details = mysqli_real_escape_string($conn, $_POST['details']);
-        $status = mysqli_real_escape_string($conn, $_POST['status']);
 
         // Handle file upload if present
         $driveFileId = null;
@@ -124,8 +123,8 @@ if (isset($_POST['create_ordinanceProposal'])) {
         }
 
         // Insert query
-        $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, status, file_name, file_path, file_type, file_size) 
-                  VALUES ('$proposal', '$proposalDate', '$details', '$status', '$fileName', '$driveFileId', '$fileType', $fileSize)";
+        $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, file_name, file_path, file_type, file_size) 
+                  VALUES ('$proposal', '$proposalDate', '$details', '$fileName', '$driveFileId', '$fileType', $fileSize)";
 
         if ($conn->query($query)) {
             $response = array(

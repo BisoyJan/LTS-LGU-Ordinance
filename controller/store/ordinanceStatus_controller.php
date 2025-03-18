@@ -122,3 +122,169 @@ if (isset($_POST['add_status'])) {
     }
     exit;
 }
+
+// Fetch Status History
+if (isset($_POST['fetch_Status'])) {
+    try {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
+
+        // Simplified query to get all status history for a proposal
+        $query = "SELECT os.*, u.username 
+                 FROM ordinance_status os
+                 LEFT JOIN users u ON os.user_id = u.id
+                 WHERE os.proposal_id = ?
+                 ORDER BY os.action_date DESC";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Query execution failed");
+        }
+
+        $result = $stmt->get_result();
+        $status_history = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $status_history[] = [
+                'action_type' => $row['action_type'],
+                'remarks' => $row['remarks'],
+                'action_date' => $row['action_date'],
+                'added_by' => $row['username'] ?? 'Unknown User'
+            ];
+        }
+
+        // Fetch file info from proposals
+        $file_query = "SELECT file_path FROM ordinance_proposals WHERE id = ?";
+        $file_stmt = $conn->prepare($file_query);
+        $file_stmt->bind_param("i", $id);
+        $file_stmt->execute();
+        $file_result = $file_stmt->get_result();
+        $file_data = $file_result->fetch_assoc();
+
+        $drive_history = null;
+        if ($file_data && !empty($file_data['file_path'])) {
+            $drive_history = [
+                'view_url' => "https://docs.google.com/document/d/" . $file_data['file_path'] . "/edit"
+            ];
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $status_history,
+            'drive_history' => $drive_history
+        ]);
+
+    } catch (Exception $e) {
+        error_log("Status History Error: " . $e->getMessage());
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Failed to fetch status history: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// Update Status
+if (isset($_POST['update_status'])) {
+    try {
+        $proposal_id = mysqli_real_escape_string($conn, $_POST['proposal_id']);
+        $user_id = $_SESSION['user_id'];
+        $remarks = mysqli_real_escape_string($conn, $_POST['remarks']);
+        $action_type = mysqli_real_escape_string($conn, $_POST['action_type']);
+
+        $query = "INSERT INTO ordinance_status (proposal_id, user_id, remarks, action_type) 
+                 VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("iiss", $proposal_id, $user_id, $remarks, $action_type);
+
+        if ($stmt->execute()) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Status updated successfully'
+            ]);
+        } else {
+            throw new Exception("Failed to update status");
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// Delete Status
+if (isset($_POST['delete_status'])) {
+    try {
+        $status_id = mysqli_real_escape_string($conn, $_POST['status_id']);
+
+        $query = "DELETE FROM ordinance_status WHERE id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $status_id);
+
+        if ($stmt->execute()) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Status deleted successfully'
+            ]);
+        } else {
+            throw new Exception("Failed to delete status");
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// Get Latest Status
+if (isset($_POST['get_latest_status'])) {
+    try {
+        $id = mysqli_real_escape_string($conn, $_POST['id']);
+
+        $query = "SELECT os.*, u.username 
+                 FROM ordinance_status os
+                 LEFT JOIN users u ON os.user_id = u.id
+                 WHERE os.proposal_id = ?
+                 ORDER BY os.action_date DESC
+                 LIMIT 1";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($row = $result->fetch_assoc()) {
+            echo json_encode([
+                'status' => 'success',
+                'data' => [
+                    'action_type' => $row['action_type'],
+                    'remarks' => $row['remarks'],
+                    'action_date' => $row['action_date'],
+                    'added_by' => $row['username'],
+                    'proposal_id' => $row['proposal_id']
+                ]
+            ]);
+        } else {
+            echo json_encode([
+                'status' => 'success',  // Changed to success with empty data
+                'data' => [
+                    'action_type' => '',
+                    'remarks' => '',
+                    'proposal_id' => $id
+                ]
+            ]);
+        }
+    } catch (Exception $e) {
+        error_log("Get Latest Status Error: " . $e->getMessage());
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Failed to fetch latest status'
+        ]);
+    }
+    exit;
+}
