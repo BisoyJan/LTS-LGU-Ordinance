@@ -1,18 +1,16 @@
 <?php
 session_start();
 require '../../database/database.php';
-require_once '../../vendor/autoload.php';
+require_once '../../vendor/autoload.php'; // Add this for Google API client
 
 use Google\Client;
 use Google\Service\Drive;
-use Google\Service\Exception as GoogleServiceException;
 
 function getGoogleDriveClient()
 {
     $credentialsPath = '../../api/credentials.json';
 
     if (!file_exists($credentialsPath)) {
-        error_log("Credentials file missing at: " . realpath($credentialsPath));
         throw new Exception('Credentials file not found');
     }
 
@@ -35,10 +33,7 @@ function getGoogleDriveClient()
     $client = new Client();
     $client->setApplicationName('LTS-LGU-Ordinance');
     $client->setAuthConfig($credentials);
-    $client->setScopes([Drive::DRIVE]);
-
-    // Uncomment if using Google Workspace
-    // $client->setSubject('admin@your-domain.com');
+    $client->setScopes([Drive::DRIVE_FILE]);
 
     return $client;
 }
@@ -46,71 +41,47 @@ function getGoogleDriveClient()
 function verifyDriveFolderAccess($driveService, $folderId)
 {
     try {
-        if (!preg_match('/^[a-zA-Z0-9_-]{15,}$/', $folderId)) {
-            throw new Exception('Invalid Google Drive Folder ID format');
-        }
-
-        $permissions = $driveService->permissions->listPermissions($folderId, [
-            'fields' => 'permissions(emailAddress,role)',
-            'supportsAllDrives' => true
-        ]);
-
-        $serviceAccountEmail = 'ordinance-access@ordinance-tracking.iam.gserviceaccount.com';
-        $hasAccess = false;
-
-        foreach ($permissions as $perm) {
-            if (strcasecmp($perm->emailAddress, $serviceAccountEmail) === 0) {
-                if (in_array($perm->role, ['writer', 'owner'])) {
-                    $hasAccess = true;
-                    break;
-                }
-            }
-        }
-
-        if (!$hasAccess) {
-            throw new Exception("Service account missing write permissions on folder");
-        }
-
+        // Try to get folder metadata to verify access
+        $folder = $driveService->files->get($folderId, ['fields' => 'id, name']);
         return true;
-    } catch (GoogleServiceException $e) {
-        error_log('Drive API Error: ' . $e->getMessage());
-        throw new Exception('Folder access verification failed: ' . $e->getMessage());
+    } catch (Exception $e) {
+        throw new Exception('Cannot access Google Drive folder. Please verify folder permissions for the service account: ordinance-proposal-tracking@formal-analyzer-454014-b0.iam.gserviceaccount.com');
     }
 }
 
 header('Content-Type: application/json');
+
 $conn = getConnection();
 
 if (isset($_POST['fetch_Proposal'])) {
     $proposal_id = mysqli_real_escape_string($conn, $_POST['id']);
-    $sql = "SELECT id, proposal, proposal_date, details, committee_id, file_name, file_path 
-            FROM ordinance_proposals 
-            WHERE id = '$proposal_id'";
+
+    $sql = "SELECT id, proposal, proposal_date, details, committee_id, file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
+
+    $query_run = mysqli_query($conn, $sql);
 
     try {
-        $query_run = mysqli_query($conn, $sql);
         $data = $query_run->fetch_assoc();
         $res = [
             'status' => $data ? 'success' : 'warning',
             'data' => $data ?? [],
             'message' => $data ? '' : 'User ID not found'
         ];
-        echo json_encode($res);
     } catch (mysqli_sql_exception $e) {
-        echo json_encode([
+        $res = [
             'status' => 'error',
             'message' => 'Error fetching proposal: ' . $e->getMessage()
-        ]);
+        ];
     }
-    exit;
+
+    echo json_encode($res);
+    return;
 }
 
 if (isset($_POST['create_ordinanceProposal'])) {
     try {
-        $nextIdQuery = "SELECT AUTO_INCREMENT 
-                       FROM information_schema.TABLES 
-                       WHERE TABLE_SCHEMA = DATABASE() 
-                       AND TABLE_NAME = 'ordinance_proposals'";
+        // Get next ID from database
+        $nextIdQuery = "SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ordinance_proposals'";
         $nextIdResult = $conn->query($nextIdQuery);
         $nextId = $nextIdResult->fetch_assoc()['AUTO_INCREMENT'];
 
@@ -118,8 +89,9 @@ if (isset($_POST['create_ordinanceProposal'])) {
         $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
         $details = mysqli_real_escape_string($conn, $_POST['details']);
         $committee_id = mysqli_real_escape_string($conn, $_POST['committee_id']);
-        $user_id = $_SESSION['user_id'];
+        $user_id = $_SESSION['user_id']; // Get current user's ID
 
+        // Handle file upload if present
         $driveFileId = null;
         $fileName = null;
         $fileType = null;
@@ -127,10 +99,13 @@ if (isset($_POST['create_ordinanceProposal'])) {
 
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
+
+            // Remove ID prefix and just use original filename
             $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
             $newFileName = $baseFileName . '.' . $fileExt;
 
+            // Check if file name already exists
             $checkQuery = "SELECT id FROM ordinance_proposals WHERE file_name = '$newFileName'";
             $checkResult = $conn->query($checkQuery);
             if ($checkResult && $checkResult->num_rows > 0) {
@@ -145,62 +120,61 @@ if (isset($_POST['create_ordinanceProposal'])) {
                 throw new Exception('File upload failed with error code: ' . $file['error']);
             }
 
-            $folderId = '15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj';
-            if (!preg_match('/^[a-zA-Z0-9_-]{15,}$/', $folderId)) {
-                throw new Exception('Invalid Google Drive Folder ID format');
-            }
-
+            // Upload to Google Drive with new filename
+            $folderId = '15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj'; // Your folder ID
             $client = getGoogleDriveClient();
             $driveService = new Drive($client);
-            verifyDriveFolderAccess($driveService, $folderId);
 
-            $fileMetadata = new Drive\DriveFile([
-                'name' => $newFileName,
-                'parents' => [$folderId]
-            ]);
+            // Verify folder access before attempting upload
+            try {
+                verifyDriveFolderAccess($driveService, $folderId);
 
-            $content = file_get_contents($file['tmp_name']);
-            $driveFile = $driveService->files->create($fileMetadata, [
-                'data' => $content,
-                'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'uploadType' => 'multipart',
-                'fields' => 'id',
-                'supportsAllDrives' => true
-            ]);
+                $fileMetadata = new Drive\DriveFile([
+                    'name' => $newFileName,
+                    'parents' => [$folderId]
+                ]);
 
-            $driveFileId = $driveFile->id;
+                $content = file_get_contents($file['tmp_name']);
+                $driveFile = $driveService->files->create($fileMetadata, [
+                    'data' => $content,
+                    'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'uploadType' => 'multipart',
+                    'fields' => 'id'
+                ]);
+
+                $driveFileId = $driveFile->id;
+
+            } catch (Exception $e) {
+                throw new Exception('Google Drive upload failed: ' . $e->getMessage() .
+                    "\nPlease ensure the service account has write access to the folder.");
+            }
+
             $fileName = $newFileName;
             $fileType = $fileExt;
             $fileSize = $file['size'];
         }
 
-        $query = "INSERT INTO ordinance_proposals 
-                 (proposal, proposal_date, details, committee_id, user_id, file_name, file_path, file_type, file_size) 
-                 VALUES ('$proposal', '$proposalDate', '$details', '$committee_id', '$user_id', 
-                         '$fileName', '$driveFileId', '$fileType', $fileSize)";
+        // Insert query
+        $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, committee_id, user_id, file_name, file_path, file_type, file_size) 
+                  VALUES ('$proposal', '$proposalDate', '$details', '$committee_id', '$user_id', '$fileName', '$driveFileId', '$fileType', $fileSize)";
 
         if ($conn->query($query)) {
-            echo json_encode([
+            $response = array(
                 'status' => 'success',
                 'message' => 'Ordinance proposal created successfully'
-            ]);
+            );
+            echo json_encode($response);
         } else {
             throw new Exception("Database error: " . $conn->error);
         }
-
-    } catch (GoogleServiceException $e) {
-        error_log('Drive API Error: ' . $e->getMessage());
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Google Drive error: ' . $e->getMessage()
-        ]);
     } catch (Exception $e) {
-        echo json_encode([
+        $conn->rollback();
+        $response = array(
             'status' => 'error',
             'message' => $e->getMessage()
-        ]);
+        );
+        echo json_encode($response);
     }
-    exit;
 }
 
 if (isset($_POST['edit_ordinanceProposal'])) {
@@ -211,24 +185,29 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         $details = mysqli_real_escape_string($conn, $_POST['details']);
         $committee_id = mysqli_real_escape_string($conn, $_POST['committee_id']);
 
+        // First update the basic information
         $query = "UPDATE ordinance_proposals 
-                 SET proposal = '$proposal', 
-                     proposal_date = '$proposalDate', 
-                     details = '$details',
-                     committee_id = '$committee_id'";
+                  SET proposal = '$proposal', 
+                      proposal_date = '$proposalDate', 
+                      details = '$details',
+                      committee_id = '$committee_id'";
 
+        // Get existing file information
         $fileQuery = "SELECT file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
         $fileResult = $conn->query($fileQuery);
         $existingFile = $fileResult->fetch_assoc();
 
-        $fileUpdate = "";
+        $fileUpdate = ""; // Initialize as an empty string
 
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
+
+            // Remove ID prefix and just use original filename
             $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
             $newFileName = $baseFileName . '.' . $fileExt;
 
+            // Check if file name already exists (excluding current proposal)
             $checkQuery = "SELECT id FROM ordinance_proposals WHERE file_name = '$newFileName' AND id != '$proposal_id'";
             $checkResult = $conn->query($checkQuery);
             if ($checkResult && $checkResult->num_rows > 0) {
@@ -239,110 +218,144 @@ if (isset($_POST['edit_ordinanceProposal'])) {
                 throw new Exception('Only .doc and .docx files are allowed');
             }
 
+            // Delete existing file from Google Drive if exists
             if ($existingFile['file_path']) {
                 $client = getGoogleDriveClient();
                 $driveService = new Drive($client);
                 try {
-                    $driveService->files->delete($existingFile['file_path'], [
-                        'supportsAllDrives' => true
-                    ]);
+                    $driveService->files->get($existingFile['file_path']);  // Check if file exists
+                    $driveService->files->delete($existingFile['file_path']);
                 } catch (Exception $e) {
-                    error_log("Delete error: " . $e->getMessage());
+                    error_log("Failed to delete file from Google Drive: " . $e->getMessage());
+                    // Continue execution even if file doesn't exist in Drive
                 }
             }
 
-            $folderId = '15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj';
-            if (!preg_match('/^[a-zA-Z0-9_-]{15,}$/', $folderId)) {
-                throw new Exception('Invalid Google Drive Folder ID format');
-            }
-
+            // Upload new file to Google Drive with new filename
+            $folderId = '15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj'; // Your folder ID
             $client = getGoogleDriveClient();
             $driveService = new Drive($client);
-            verifyDriveFolderAccess($driveService, $folderId);
 
-            $fileMetadata = new Drive\DriveFile([
-                'name' => $newFileName,
-                'parents' => [$folderId]
-            ]);
+            // Verify folder access before attempting upload
+            try {
+                verifyDriveFolderAccess($driveService, $folderId);
 
-            $content = file_get_contents($file['tmp_name']);
-            $driveFile = $driveService->files->create($fileMetadata, [
-                'data' => $content,
-                'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'uploadType' => 'multipart',
-                'fields' => 'id',
-                'supportsAllDrives' => true
-            ]);
+                $fileMetadata = new Drive\DriveFile([
+                    'name' => $newFileName,
+                    'parents' => [$folderId]
+                ]);
 
-            $fileUpdate = ", file_name = '{$newFileName}', file_path = '{$driveFile->id}', 
-                          file_type = '$fileExt', file_size = {$file['size']}";
+                $content = file_get_contents($file['tmp_name']);
+                $driveFile = $driveService->files->create($fileMetadata, [
+                    'data' => $content,
+                    'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'uploadType' => 'multipart',
+                    'fields' => 'id'
+                ]);
+
+                $fileUpdate = ", file_name = '{$newFileName}', file_path = '{$driveFile->id}', 
+                               file_type = '$fileExt', file_size = {$file['size']}";
+
+            } catch (Exception $e) {
+                throw new Exception('Google Drive upload failed: ' . $e->getMessage() .
+                    "\nPlease ensure the service account has write access to the folder.");
+            }
         }
 
-        $query .= $fileUpdate . " WHERE id = '$proposal_id'";
+        // Construct the update query
+        $query = "UPDATE ordinance_proposals 
+                  SET proposal = '$proposal', 
+                      proposal_date = '$proposalDate', 
+                      details = '$details',
+                      committee_id = '$committee_id'";
 
+        // Append file update fields if present
+        if (!empty($fileUpdate)) {
+            $query .= $fileUpdate;
+        }
+
+        $query .= " WHERE id = '$proposal_id'";
+
+        // Execute the query
         if ($conn->query($query)) {
-            echo json_encode([
+            $response = array(
                 'status' => 'success',
                 'message' => 'Ordinance proposal updated successfully'
-            ]);
+            );
         } else {
             throw new Exception("Database error: " . $conn->error);
         }
 
-    } catch (GoogleServiceException $e) {
-        error_log('Drive API Error: ' . $e->getMessage());
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Google Drive error: ' . $e->getMessage()
-        ]);
+        echo json_encode($response);
+
     } catch (Exception $e) {
-        echo json_encode([
+        $response = array(
             'status' => 'error',
             'message' => $e->getMessage()
-        ]);
+        );
+        echo json_encode($response);
     }
-    exit;
 }
 
 if (isset($_POST['delete_ordinanceProposal'])) {
     try {
         if (!isset($_POST['deleteID']) || empty($_POST['deleteID'])) {
+
             throw new Exception('Proposal ID is required');
         }
 
         $proposal_id = mysqli_real_escape_string($conn, $_POST['deleteID']);
 
+        // Get existing file information
         $fileQuery = "SELECT file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
         $fileResult = $conn->query($fileQuery);
+
+        if (!$fileResult) {
+            throw new Exception("Database error while fetching file info: " . $conn->error);
+        }
+
         $existingFile = $fileResult->fetch_assoc();
 
+        // Only attempt file deletion if we have a valid file path
         if ($existingFile && !empty($existingFile['file_path'])) {
             $client = getGoogleDriveClient();
             $driveService = new Drive($client);
             try {
-                $driveService->files->delete($existingFile['file_path'], [
-                    'supportsAllDrives' => true
-                ]);
-            } catch (GoogleServiceException $e) {
-                error_log("Delete error: " . $e->getMessage());
+                // Check if file exists in Google Drive
+                $driveService->files->get($existingFile['file_path']);
+                $driveService->files->delete($existingFile['file_path']);
+            } catch (Exception $e) {
+                // File doesn't exist in Google Drive, just log it
+                error_log("File not found in Google Drive: " . $e->getMessage());
+                $response = array(
+                    'status' => 'warning',
+                    'message' => 'File not found in Google Drive. Database record will be deleted.'
+                );
+                echo json_encode($response);
+                // Continue with database deletion
             }
         }
 
         $query = "DELETE FROM ordinance_proposals WHERE id = '$proposal_id'";
+
         if ($conn->query($query)) {
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Ordinance proposal deleted successfully'
-            ]);
+            if (!isset($response)) {  // Only set response if not already set
+                $response = array(
+                    'status' => 'success',
+                    'message' => 'Ordinance proposal deleted successfully'
+                );
+            }
         } else {
             throw new Exception("Database error: " . $conn->error);
         }
 
+        echo json_encode($response);
+
     } catch (Exception $e) {
-        echo json_encode([
+        $response = array(
             'status' => 'error',
             'message' => $e->getMessage()
-        ]);
+        );
+        echo json_encode($response);
     }
-    exit;
 }

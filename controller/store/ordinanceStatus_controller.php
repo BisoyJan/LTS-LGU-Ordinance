@@ -174,11 +174,11 @@ if (isset($_POST['fetch_Status'])) {
         if ($file_data && !empty($file_data['file_path'])) {
             $fileId = $file_data['file_path'];
             $drive_history = [
-                'view_url' => "https://docs.google.com/document/d/{$fileId}/edit",
+                'view_url' => "https://docs.google.com/document/d/{$fileId}/view",
                 'file_name' => $file_data['file_name'],
                 'created_at' => $file_data['created_at'],
                 'creator' => $file_data['creator'],
-                'revision_url' => "https://docs.google.com/document/d/{$fileId}/edit#versions"
+                'revision_url' => "https://docs.google.com/document/d/{$fileId}/edit?usp=sharing"
             ];
         }
 
