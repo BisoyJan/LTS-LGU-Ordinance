@@ -1,5 +1,6 @@
 <?php
 require '../../database/database.php';
+session_start();
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -7,13 +8,18 @@ error_reporting(E_ALL);
 $conn = getConnection();
 
 $output = array();
-$columns = array("id", "proposal", "proposal_date", "details", "file_name"); // Removed status
+$columns = array("id", "proposal", "proposal_date", "details", "file_name");
+
 $search_value = isset($_POST['search']['value']) ? trim($_POST['search']['value']) : "";
 
-// Base Query without status
-$sql = "SELECT id, proposal, proposal_date, details, file_name, file_path, 
-        file_type, file_size, created_at 
-        FROM ordinance_proposals";
+
+$sql = "SELECT op.id, op.proposal, op.proposal_date, op.details, op.file_name, op.file_path, 
+        op.file_type, op.file_size, op.created_at, 
+        c.name as committee_name, 
+        u.username as created_by
+        FROM ordinance_proposals op
+        LEFT JOIN committees c ON op.committee_id = c.id
+        LEFT JOIN users u ON op.user_id = u.id";
 $totalQuery = mysqli_query($conn, $sql);
 $total_all_rows = mysqli_num_rows($totalQuery);
 
@@ -63,34 +69,34 @@ if (!$query) {
 $data = array();
 while ($row = mysqli_fetch_assoc($query)) {
     $formatted_date = date('M d, Y', strtotime($row['proposal_date']));
+    $googleDocsUrl = !empty($row['file_path']) ?
+        "https://docs.google.com/document/d/" . $row['file_path'] . "/preview" : '';
 
-    // Create Google Docs viewer URL
-    $googleDocsUrl = '';
-    if (!empty($row['file_path'])) {
-        $driveFileId = $row['file_path'];
-        $googleDocsUrl = "https://docs.google.com/document/d/" . $driveFileId . "/preview";
+    $file_html = '<div class="file-attachment">';
+    if (!empty($row['file_name'])) {
+        $file_html .= '<i class="fas fa-file-word text-primary me-1"></i>' .
+            '<a href="' . $googleDocsUrl . '" target="_blank">' .
+            htmlspecialchars($row['file_name']) . '</a>';
+    } else {
+        $file_html .= '<span class="text-muted">No file</span>';
     }
+    $file_html .= '</div>';
 
-    $data[] = [
-        htmlspecialchars($row['id']),
-        truncateText(htmlspecialchars($row['proposal']), 6),
-        htmlspecialchars($formatted_date),
-        truncateText(htmlspecialchars($row["details"]), 6),
-        '<div class="file-attachment">
-            <span class="file-icon">' . getFileIcon($row['file_type']) . '</span>
-            ' . (!empty($row['file_name']) ? '
-                <a href="' . $googleDocsUrl . '" target="_blank" class="file-link">
-                    ' . truncateText(htmlspecialchars($row['file_name']), 3) . ' (' . formatFileSize($row['file_size']) . ')
-                </a>' : '<span class="text-muted">No file attached</span>') . '
-        </div>',
-        '<button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewProposalModal"><i class="fas fa-eye"></i></button>
-        <button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#proposalModal"><i class="fas fa-edit"></i></button>
-        <button class="viewFileButton btn btn-info btn-sm ms-1" data-id="' . $row["id"] . '" ' . (empty($row['file_path']) ? 'disabled' : '') . ' onclick="viewFile(\'' . $googleDocsUrl . '\')" type="button"><i class="fas fa-file-alt"></i></button>
+    $actions = '
+        <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '"><i class="fas fa-eye"></i></button>
+        <button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '"><i class="fas fa-edit"></i></button>
+        <button class="deleteButton btn btn-danger btn-sm ms-1" data-id="' . $row["id"] . '"><i class="fas fa-trash"></i></button>
+    ';
 
-        <button class="btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#proposalStatusModal"><i class="fas fa-pen"></i></button>
-        
-        <button class="deleteButton btn btn-danger btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#proposalDeleteModal"><i class="fas fa-trash"></i></button>'
-    ];
+    $data[] = array(
+        $row['id'],
+        $row['proposal'] . '<br><small class="text-muted">By: ' . $row['created_by'] .
+        '<br>Committee: ' . $row['committee_name'] . '</small>',
+        $formatted_date,
+        $row['details'],
+        $file_html,
+        $actions
+    );
 }
 
 // Function to format file size

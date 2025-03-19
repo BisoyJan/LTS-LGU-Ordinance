@@ -128,8 +128,8 @@ if (isset($_POST['fetch_Status'])) {
     try {
         $id = mysqli_real_escape_string($conn, $_POST['id']);
 
-        // Simplified query to get all status history for a proposal
-        $query = "SELECT os.*, u.username 
+        // Updated query to use user_id instead of added_by
+        $query = "SELECT os.*, u.username as added_by 
                  FROM ordinance_status os
                  LEFT JOIN users u ON os.user_id = u.id
                  WHERE os.proposal_id = ?
@@ -154,8 +154,16 @@ if (isset($_POST['fetch_Status'])) {
             ];
         }
 
-        // Fetch file info from proposals
-        $file_query = "SELECT file_path FROM ordinance_proposals WHERE id = ?";
+        // Updated file query to include creation info
+        $file_query = "SELECT 
+            op.file_path, 
+            op.file_name, 
+            op.created_at,
+            creator.username as creator
+        FROM ordinance_proposals op
+        LEFT JOIN users creator ON op.user_id = creator.id
+        WHERE op.id = ?";
+
         $file_stmt = $conn->prepare($file_query);
         $file_stmt->bind_param("i", $id);
         $file_stmt->execute();
@@ -164,8 +172,13 @@ if (isset($_POST['fetch_Status'])) {
 
         $drive_history = null;
         if ($file_data && !empty($file_data['file_path'])) {
+            $fileId = $file_data['file_path'];
             $drive_history = [
-                'view_url' => "https://docs.google.com/document/d/" . $file_data['file_path'] . "/edit"
+                'view_url' => "https://docs.google.com/document/d/{$fileId}/edit",
+                'file_name' => $file_data['file_name'],
+                'created_at' => $file_data['created_at'],
+                'creator' => $file_data['creator'],
+                'revision_url' => "https://docs.google.com/document/d/{$fileId}/edit#versions"
             ];
         }
 

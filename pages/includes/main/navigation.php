@@ -109,6 +109,13 @@ function hasAccess($requiredRole)
                     <span>Settings</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="../views/committee.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'committee.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-users-gear me-2"></i>
+                    <span>Committees</span>
+                </a>
+            </li>
         <?php endif; ?>
     </ul>
 </div>

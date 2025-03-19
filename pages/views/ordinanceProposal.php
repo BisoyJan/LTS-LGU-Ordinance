@@ -67,6 +67,36 @@ include '../includes/main/navigation.php';
                             </div>
                         </div>
                         <div class="mb-3">
+                            <label for="committee" class="form-label">Committee</label>
+                            <select class="form-select" id="committee" name="committee_id" required>
+                                <option value="">Select Committee</option>
+                                <?php
+                                require_once '../../database/database.php';
+                                try {
+                                    $conn = getConnection();
+                                    if ($conn) {
+                                        $query = "SELECT id, name FROM committees ORDER BY name";
+                                        $result = mysqli_query($conn, $query);
+                                        if ($result) {
+                                            while ($row = mysqli_fetch_assoc($result)) {
+                                                echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
+                                            }
+                                        } else {
+                                            echo "<option value=''>Error loading committees</option>";
+                                        }
+                                    } else {
+                                        echo "<option value=''>Database connection failed</option>";
+                                    }
+                                } catch (Exception $e) {
+                                    echo "<option value=''>Error: " . htmlspecialchars($e->getMessage()) . "</option>";
+                                }
+                                ?>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a committee.
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label for="file" class="form-label">File</label>
                             <input class="form-control" type="file" id="file" name="file">
                             <div class="invalid-feedback">
@@ -273,26 +303,21 @@ include '../includes/main/navigation.php';
 
     // Function to change modal title and form action for adding proposal
     function formIDChangeAdd() {
-        $("form").attr('id', 'proposalForm');
         $("#proposalModalLabel").text('Add Proposal');
         $("#proposalForm")[0].reset();
-        $("#file").prop('required', true); // Make file required for new proposals
-    }
-
-    // Function to change modal title and form action for editing proposal
-    function formIDChangeEdit() {
-        $("form").attr('id', 'editProposalForm');
-        $("#proposalModalLabel").text('Edit Proposal');
-        $("#file").prop('required', false); // Remove required for editing
+        $("#proposalID").val(''); // Clear the ID
+        $("#file").prop('required', true);
     }
 
     // Function to create a proposal
     $(document).on('submit', '#proposalForm', function (e) {
         e.preventDefault();
         var formData = new FormData(this);
-        formData.append('create_ordinanceProposal', true);
+        var isEdit = $('#proposalID').val() !== '';
 
-        showLoading(); // Show loading animation
+        formData.append(isEdit ? 'edit_ordinanceProposal' : 'create_ordinanceProposal', true);
+
+        showLoading();
 
         $.ajax({
             url: '../../controller/store/ordinanceProposal_controller.php',
@@ -302,15 +327,14 @@ include '../includes/main/navigation.php';
             contentType: false,
             processData: false,
             success: function (response) {
-                hideLoading(); // Hide loading animation
+                hideLoading();
                 try {
-                    // Parse the response if it's a string
                     const result = typeof response === 'string' ? JSON.parse(response) : response;
-
                     if (result.status === 'success') {
                         $('#proposalModal').modal('hide');
                         $('#ordinanceProposalsTable').DataTable().draw();
                         $('#proposalForm')[0].reset();
+                        $('#proposalID').val(''); // Clear the ID after successful submission
                         showToast(result.message, 'success');
                     } else {
                         showToast(result.message || 'Unknown error occurred', 'error');
@@ -321,8 +345,8 @@ include '../includes/main/navigation.php';
                 }
             },
             error: function (xhr, status, error) {
-                hideLoading(); // Hide loading animation
-                console.error('Ajax Error:', status, error);
+                hideLoading();
+                console.error('Ajax Error:', error);
                 showToast(error, 'error');
             }
         });
@@ -332,6 +356,10 @@ include '../includes/main/navigation.php';
         e.preventDefault();
         var id = $(this).attr('data-id');
 
+        // Change modal title
+        $("#proposalModalLabel").text('Edit Proposal');
+        $("#file").prop('required', false);
+
         $.ajax({
             type: 'POST',
             url: '../../controller/store/ordinanceProposal_controller.php',
@@ -339,54 +367,18 @@ include '../includes/main/navigation.php';
                 'id': id,
                 'fetch_Proposal': true
             },
-            dataType: 'json', // Add this to automatically parse JSON
             success: function (response) {
-                // Remove the manual parsing since response is already JSON
-                if (response.status === 'success') {
-                    $('#proposalModal').modal('show');
-                    $('#proposalID').val(response.data.id);
-                    $('#proposal').val(response.data.proposal);
-                    $('#proposalDate').val(response.data.proposal_date);
-                    $('#details').val(response.data.details);
-                    $('#file').val(response)
-                } else {
-                    showToast(response.message, 'danger');
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Ajax Error:', error);
-                showToast('Failed to fetch proposal details', 'danger');
-            }
-        });
-    });
-
-    $(document).on('submit', '#editProposalForm', function (e) {
-        e.preventDefault();
-        var formData = new FormData(this);
-        formData.append('edit_ordinanceProposal', true);
-
-        showLoading(); // Show loading animation
-
-        $.ajax({
-            url: '../../controller/store/ordinanceProposal_controller.php',
-            type: 'POST',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function (response) {
-                hideLoading(); // Hide loading animation
                 try {
-                    // Parse the response if it's a string
                     const result = typeof response === 'string' ? JSON.parse(response) : response;
-
                     if (result.status === 'success') {
-                        $('#proposalModal').modal('hide');
-                        $('#ordinanceProposalsTable').DataTable().draw();
-                        $('#editProposalForm')[0].reset();
-                        showToast(result.message, 'success');
+                        $('#proposalModal').modal('show');
+                        $('#proposalID').val(result.data.id);
+                        $('#proposal').val(result.data.proposal);
+                        $('#proposalDate').val(result.data.proposal_date);
+                        $('#details').val(result.data.details);
+                        $('#committee').val(result.data.committee_id);
                     } else {
-                        showToast(result.message || 'Unknown error occurred', 'error');
+                        showToast(result.message || 'Failed to fetch proposal details', 'error');
                     }
                 } catch (e) {
                     console.error('Response parsing error:', e);
@@ -394,9 +386,8 @@ include '../includes/main/navigation.php';
                 }
             },
             error: function (xhr, status, error) {
-                hideLoading(); // Hide loading animation
-                console.error('Ajax Error:', status, error);
-                showToast(error, 'error');
+                console.error('Ajax Error:', error);
+                showToast('Failed to fetch proposal details', 'error');
             }
         });
     });

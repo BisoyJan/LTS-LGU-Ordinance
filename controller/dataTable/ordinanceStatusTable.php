@@ -11,26 +11,47 @@ $columns = array(
     "op.id",
     "op.proposal",
     "op.proposal_date",
+    "u.username",
+    "c.name",  // Changed from c.committee_name to c.name
     "os.action_type"
 );
 
 $search_value = isset($_POST['search']['value']) ? trim($_POST['search']['value']) : "";
 
-// Base Query with JOIN to get latest status
-$sql = "SELECT op.id, op.proposal, op.proposal_date, op.details, op.file_path,
-        os.action_type, os.remarks, os.action_date
-        FROM ordinance_proposals op
-        LEFT JOIN (
-            SELECT proposal_id, action_type, remarks, action_date
-            FROM ordinance_status os1
-            WHERE action_date = (
-                SELECT MAX(action_date)
-                FROM ordinance_status os2
-                WHERE os1.proposal_id = os2.proposal_id
-            )
-        ) os ON op.id = os.proposal_id";
+// Modified base query with correct column names
+$sql = "SELECT 
+    op.id, 
+    op.proposal, 
+    op.proposal_date, 
+    op.details, 
+    op.file_path,
+    COALESCE(u1.username, 'System') as created_by,
+    COALESCE(c.name, 'Unassigned') as committee_name,
+    os.action_type,
+    os.remarks, 
+    os.action_date,
+    COALESCE(u2.username, 'System') as status_updated_by
+FROM ordinance_proposals op
+LEFT JOIN users u1 ON op.user_id = u1.id
+LEFT JOIN committees c ON op.committee_id = c.id
+LEFT JOIN (
+    SELECT proposal_id, action_type, remarks, action_date, user_id
+    FROM ordinance_status os1
+    WHERE action_date = (
+        SELECT MAX(action_date)
+        FROM ordinance_status os2
+        WHERE os1.proposal_id = os2.proposal_id
+    )
+) os ON op.id = os.proposal_id
+LEFT JOIN users u2 ON os.user_id = u2.id";
 
 $totalQuery = mysqli_query($conn, $sql);
+if (!$totalQuery) {
+    error_log("SQL Error in total query: " . mysqli_error($conn));
+    echo json_encode(['error' => 'Database query failed: ' . mysqli_error($conn)]);
+    exit;
+}
+
 $total_all_rows = mysqli_num_rows($totalQuery);
 
 // Filtering
@@ -38,7 +59,9 @@ $whereClause = "";
 if (!empty($search_value)) {
     $search_value = mysqli_real_escape_string($conn, $search_value);
     $whereClause = " WHERE op.proposal LIKE '%$search_value%' 
-                     OR os.action_type LIKE '%$search_value%'";
+                     OR os.action_type LIKE '%$search_value%'
+                     OR u1.username LIKE '%$search_value%'
+                     OR c.name LIKE '%$search_value%'";  // Changed from c.committee_name to c.name
 }
 
 // Sorting
@@ -66,11 +89,12 @@ $start = isset($_POST['start']) ? intval($_POST['start']) : 0;
 $length = isset($_POST['length']) && $_POST['length'] != -1 ? intval($_POST['length']) : 10;
 $limitClause = " LIMIT $start, $length";
 
-// Final Query
+// Final Query with error logging
 $final_query = $sql . $whereClause . $orderClause . $limitClause;
 $query = mysqli_query($conn, $final_query);
 
 if (!$query) {
+    error_log("SQL Error in final query: " . mysqli_error($conn));
     echo json_encode(['error' => 'Database query failed: ' . mysqli_error($conn)]);
     exit;
 }
@@ -81,22 +105,33 @@ while ($row = mysqli_fetch_assoc($query)) {
     $status = $row['action_type'] ?: 'Not Started';
     $status_badge = getStatusBadge($status);
 
-    // Create Google Drive edit URL
-    $driveEditUrl = '';
-    if (!empty($row['file_path'])) {
-        $driveFileId = $row['file_path'];
-        $driveEditUrl = "https://docs.google.com/document/d/" . $driveFileId . "/edit";
-    }
+    $googleDocsUrl = !empty($row['file_path']) ?
+        "https://docs.google.com/document/d/" . $row['file_path'] . "/preview" : '';
 
-    $data[] = [
+    $file_html = '<div class="file-attachment">';
+    if (!empty($row['file_name'])) {
+        $file_html .= '<i class="fas fa-file-word text-primary me-1"></i>' .
+            '<a href="' . $googleDocsUrl . '" target="_blank">' .
+            htmlspecialchars($row['file_name']) . '</a>';
+    } else {
+        $file_html .= '<span class="text-muted">No file</span>';
+    }
+    $file_html .= '</div>';
+
+    $actions = '
+        <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewStatusModal"><i class="fas fa-eye"></i></button>
+        <button class="updateStatusButton btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button"><i class="fas fa-pen"></i></button>' .
+        (!empty($row['file_path']) ? ' <a href="' . $googleDocsUrl . '" target="_blank" class="btn btn-info btn-sm ms-1" title="View in Google Drive"><i class="fas fa-file-edit"></i></a>' : '');
+
+    $data[] = array(
         htmlspecialchars($row['id']),
-        htmlspecialchars($row['proposal']),
-        htmlspecialchars($formatted_date),
+        htmlspecialchars($row['proposal']) .
+        '<br><small class="text-muted">Created by: ' . htmlspecialchars($row['created_by']) .
+        '<br>Committee: ' . htmlspecialchars($row['committee_name']) . '</small>',
+        $formatted_date,
         $status_badge,
-        '<button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewStatusModal"><i class="fas fa-eye"></i></button>
-         <button class="updateStatusButton btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#updateStatusModal"><i class="fas fa-pen"></i></button>' .
-        (!empty($driveEditUrl) ? ' <a href="' . $driveEditUrl . '" target="_blank" class="btn btn-info btn-sm ms-1" title="Edit in Google Drive"><i class="fas fa-file-edit"></i></a>' : '')
-    ];
+        $actions
+    );
 }
 
 function getStatusBadge($status)

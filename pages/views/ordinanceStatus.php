@@ -94,10 +94,17 @@ include('../includes/main/navigation.php');
             "ajax": {
                 "url": "../../controller/dataTable/ordinanceStatusTable.php",
                 "type": "POST",
-                "dataSrc": "data",
+                "dataSrc": function (json) {
+                    if (json.error) {
+                        console.error('Server Error:', json.error);
+                        showToast('Error: ' + json.error, 'error');
+                        return [];
+                    }
+                    return json.data;
+                },
                 "error": function (xhr, error, thrown) {
-                    console.error('DataTables Ajax Error:', xhr, error, thrown);
-                    alert('Error loading ordinance status data');
+                    console.error('DataTables Ajax Error:', xhr.responseText);
+                    showToast('Error loading data: ' + (xhr.responseText || error), 'error');
                 }
             },
             "columns": [
@@ -147,27 +154,63 @@ include('../includes/main/navigation.php');
                     if (result.status === 'success' && Array.isArray(result.data)) {
                         let historyHtml = '<div class="timeline">';
 
-                        // Add Google Drive info if available
+                        // Show proposal creator info if available
                         if (result.drive_history) {
                             historyHtml += `
                                 <div class="card mb-3">
                                     <div class="card-body">
                                         <h6 class="card-title">
-                                            <i class="fab fa-google-drive me-2"></i>
-                                            Document Link
+                                            <i class="fas fa-file-alt me-2"></i>
+                                            Ordinance Document
                                         </h6>
-                                        <a href="${result.drive_history.view_url}" target="_blank" class="btn btn-sm btn-primary">
+                                        <p class="mb-2">
+                                            <small class="text-muted">
+                                                Created by: ${result.drive_history.creator || 'Unknown'}<br>
+                                                Created on: ${new Date(result.drive_history.created_at).toLocaleString()}
+                                            </small>
+                                        </p>`;
+
+                            // Only show version history if document has been edited
+                            if (result.drive_history.last_updated &&
+                                result.drive_history.created_at !== result.drive_history.last_updated) {
+                                historyHtml += `
+                                    <div class="card mt-2">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle">
+                                                <i class="fas fa-history me-2"></i>
+                                                Latest Edit
+                                            </h6>
+                                            <p class="mb-2">
+                                                <small class="text-muted">
+                                                    Last edited: ${new Date(result.drive_history.last_updated).toLocaleString()}<br>
+                                                    By: ${result.drive_history.last_editor || 'Unknown'}
+                                                </small>
+                                            </p>
+                                        </div>
+                                    </div>`;
+                            }
+
+                            historyHtml += `
+                                    <div class="btn-group mt-2">
+                                        <a href="${result.drive_history.view_url}" target="_blank" 
+                                           class="btn btn-sm btn-primary">
                                             <i class="fas fa-external-link-alt me-1"></i>
-                                            View in Google Drive
+                                            View Document
+                                        </a>
+                                        <a href="${result.drive_history.revision_url}" target="_blank" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-history me-1"></i>
+                                            View Revisions
                                         </a>
                                     </div>
-                                </div>`;
+                                </div>
+                            </div>`;
                         }
 
+                        // Add status history
                         if (result.data.length === 0) {
-                            historyHtml += '<div class="alert alert-info">No status history available.</div>';
+                            historyHtml += '<div class="alert alert-info">No status updates available yet.</div>';
                         } else {
-                            // Add status history
                             result.data.forEach(function (item) {
                                 const statusBadge = `<span class="badge bg-${getStatusColor(item.action_type)}">${item.action_type}</span>`;
                                 historyHtml += `

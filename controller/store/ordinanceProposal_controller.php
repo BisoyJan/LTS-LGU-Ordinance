@@ -1,4 +1,5 @@
 <?php
+session_start();
 require '../../database/database.php';
 require_once '../../vendor/autoload.php'; // Add this for Google API client
 
@@ -44,7 +45,7 @@ $conn = getConnection();
 if (isset($_POST['fetch_Proposal'])) {
     $proposal_id = mysqli_real_escape_string($conn, $_POST['id']);
 
-    $sql = "SELECT id, proposal, proposal_date, details, file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
+    $sql = "SELECT id, proposal, proposal_date, details, committee_id, file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
 
     $query_run = mysqli_query($conn, $sql);
 
@@ -76,6 +77,8 @@ if (isset($_POST['create_ordinanceProposal'])) {
         $proposal = mysqli_real_escape_string($conn, $_POST['proposal']);
         $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
         $details = mysqli_real_escape_string($conn, $_POST['details']);
+        $committee_id = mysqli_real_escape_string($conn, $_POST['committee_id']);
+        $user_id = $_SESSION['user_id']; // Get current user's ID
 
         // Handle file upload if present
         $driveFileId = null;
@@ -130,8 +133,8 @@ if (isset($_POST['create_ordinanceProposal'])) {
         }
 
         // Insert query
-        $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, file_name, file_path, file_type, file_size) 
-                  VALUES ('$proposal', '$proposalDate', '$details', '$fileName', '$driveFileId', '$fileType', $fileSize)";
+        $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, committee_id, user_id, file_name, file_path, file_type, file_size) 
+                  VALUES ('$proposal', '$proposalDate', '$details', '$committee_id', '$user_id', '$fileName', '$driveFileId', '$fileType', $fileSize)";
 
         if ($conn->query($query)) {
             $response = array(
@@ -143,6 +146,7 @@ if (isset($_POST['create_ordinanceProposal'])) {
             throw new Exception("Database error: " . $conn->error);
         }
     } catch (Exception $e) {
+        $conn->rollback();
         $response = array(
             'status' => 'error',
             'message' => $e->getMessage()
@@ -157,6 +161,14 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         $proposal = mysqli_real_escape_string($conn, $_POST['proposal']);
         $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
         $details = mysqli_real_escape_string($conn, $_POST['details']);
+        $committee_id = mysqli_real_escape_string($conn, $_POST['committee_id']);
+
+        // First update the basic information
+        $query = "UPDATE ordinance_proposals 
+                  SET proposal = '$proposal', 
+                      proposal_date = '$proposalDate', 
+                      details = '$details',
+                      committee_id = '$committee_id'";
 
         // Get existing file information
         $fileQuery = "SELECT file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
@@ -222,7 +234,8 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         $query = "UPDATE ordinance_proposals 
                   SET proposal = '$proposal', 
                       proposal_date = '$proposalDate', 
-                      details = '$details'";
+                      details = '$details',
+                      committee_id = '$committee_id'";
 
         // Append file update fields if present
         if (!empty($fileUpdate)) {
