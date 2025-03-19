@@ -86,10 +86,17 @@ if (isset($_POST['create_ordinanceProposal'])) {
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
 
-            // Add ID to filename
+            // Remove ID prefix and just use original filename
             $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
-            $newFileName = $nextId . '_' . $baseFileName . '.' . $fileExt;
+            $newFileName = $baseFileName . '.' . $fileExt;
+
+            // Check if file name already exists
+            $checkQuery = "SELECT id FROM ordinance_proposals WHERE file_name = '$newFileName'";
+            $checkResult = $conn->query($checkQuery);
+            if ($checkResult && $checkResult->num_rows > 0) {
+                throw new Exception('A file with this name already exists. Please rename your file.');
+            }
 
             if (!in_array($fileExt, ['doc', 'docx'])) {
                 throw new Exception('Only .doc and .docx files are allowed');
@@ -151,21 +158,27 @@ if (isset($_POST['edit_ordinanceProposal'])) {
         $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
         $details = mysqli_real_escape_string($conn, $_POST['details']);
 
-
         // Get existing file information
         $fileQuery = "SELECT file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
         $fileResult = $conn->query($fileQuery);
         $existingFile = $fileResult->fetch_assoc();
 
-        $fileUpdate = "";
+        $fileUpdate = ""; // Initialize as an empty string
 
         if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['file'];
 
-            // Add existing ID to filename
+            // Remove ID prefix and just use original filename
             $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
-            $newFileName = $proposal_id . '_' . $baseFileName . '.' . $fileExt;
+            $newFileName = $baseFileName . '.' . $fileExt;
+
+            // Check if file name already exists (excluding current proposal)
+            $checkQuery = "SELECT id FROM ordinance_proposals WHERE file_name = '$newFileName' AND id != '$proposal_id'";
+            $checkResult = $conn->query($checkQuery);
+            if ($checkResult && $checkResult->num_rows > 0) {
+                throw new Exception('A file with this name already exists. Please rename your file.');
+            }
 
             if (!in_array($fileExt, ['doc', 'docx'])) {
                 throw new Exception('Only .doc and .docx files are allowed');
@@ -176,9 +189,11 @@ if (isset($_POST['edit_ordinanceProposal'])) {
                 $client = getGoogleDriveClient();
                 $driveService = new Drive($client);
                 try {
+                    $driveService->files->get($existingFile['file_path']);  // Check if file exists
                     $driveService->files->delete($existingFile['file_path']);
                 } catch (Exception $e) {
                     error_log("Failed to delete file from Google Drive: " . $e->getMessage());
+                    // Continue execution even if file doesn't exist in Drive
                 }
             }
 
@@ -203,14 +218,20 @@ if (isset($_POST['edit_ordinanceProposal'])) {
                            file_type = '$fileExt', file_size = {$file['size']}";
         }
 
-        // Update query
+        // Construct the update query
         $query = "UPDATE ordinance_proposals 
-                 SET proposal = '$proposal', 
-                     proposal_date = '$proposalDate', 
-                     details = '$details',
-                     $fileUpdate 
-                 WHERE id = '$proposal_id'";
+                  SET proposal = '$proposal', 
+                      proposal_date = '$proposalDate', 
+                      details = '$details'";
 
+        // Append file update fields if present
+        if (!empty($fileUpdate)) {
+            $query .= $fileUpdate;
+        }
+
+        $query .= " WHERE id = '$proposal_id'";
+
+        // Execute the query
         if ($conn->query($query)) {
             $response = array(
                 'status' => 'success',
@@ -255,19 +276,30 @@ if (isset($_POST['delete_ordinanceProposal'])) {
             $client = getGoogleDriveClient();
             $driveService = new Drive($client);
             try {
+                // Check if file exists in Google Drive
+                $driveService->files->get($existingFile['file_path']);
                 $driveService->files->delete($existingFile['file_path']);
             } catch (Exception $e) {
-                error_log("Failed to delete file from Google Drive: " . $e->getMessage());
+                // File doesn't exist in Google Drive, just log it
+                error_log("File not found in Google Drive: " . $e->getMessage());
+                $response = array(
+                    'status' => 'warning',
+                    'message' => 'File not found in Google Drive. Database record will be deleted.'
+                );
+                echo json_encode($response);
+                // Continue with database deletion
             }
         }
 
         $query = "DELETE FROM ordinance_proposals WHERE id = '$proposal_id'";
 
         if ($conn->query($query)) {
-            $response = array(
-                'status' => 'success',
-                'message' => 'Ordinance proposal deleted successfully'
-            );
+            if (!isset($response)) {  // Only set response if not already set
+                $response = array(
+                    'status' => 'success',
+                    'message' => 'Ordinance proposal deleted successfully'
+                );
+            }
         } else {
             throw new Exception("Database error: " . $conn->error);
         }

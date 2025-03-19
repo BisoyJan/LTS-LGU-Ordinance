@@ -73,14 +73,14 @@ while ($row = mysqli_fetch_assoc($query)) {
 
     $data[] = [
         htmlspecialchars($row['id']),
-        htmlspecialchars($row['proposal']),
+        truncateText(htmlspecialchars($row['proposal']), 6),
         htmlspecialchars($formatted_date),
         truncateText(htmlspecialchars($row["details"]), 6),
         '<div class="file-attachment">
             <span class="file-icon">' . getFileIcon($row['file_type']) . '</span>
             ' . (!empty($row['file_name']) ? '
                 <a href="' . $googleDocsUrl . '" target="_blank" class="file-link">
-                    ' . htmlspecialchars($row['file_name']) . ' (' . formatFileSize($row['file_size']) . ')
+                    ' . truncateText(htmlspecialchars($row['file_name']), 3) . ' (' . formatFileSize($row['file_size']) . ')
                 </a>' : '<span class="text-muted">No file attached</span>') . '
         </div>',
         '<button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewProposalModal"><i class="fas fa-eye"></i></button>
@@ -121,7 +121,7 @@ function truncateText($text, $limit)
 {
     $words = explode(' ', $text);
     if (count($words) > $limit) {
-        return implode(' ', array_slice($words, 0, $limit)) . '.....';
+        return implode(' ', array_slice($words, 0, $limit)) . '...';
     }
     return $text;
 }

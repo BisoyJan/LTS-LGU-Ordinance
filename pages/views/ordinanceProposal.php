@@ -68,7 +68,7 @@ include '../includes/main/navigation.php';
                         </div>
                         <div class="mb-3">
                             <label for="file" class="form-label">File</label>
-                            <input class="form-control" type="file" id="file" name="file" required>
+                            <input class="form-control" type="file" id="file" name="file">
                             <div class="invalid-feedback">
                                 Please upload a file.
                             </div>
@@ -118,7 +118,9 @@ include '../includes/main/navigation.php';
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-3 fw-bold">Proposal:</div>
-                        <div class="col-md-9" id="viewProposal"></div>
+                        <div class="col-md-9">
+                            <div class="text-wrap" id="viewProposal"></div>
+                        </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-3 fw-bold">Date:</div>
@@ -126,12 +128,14 @@ include '../includes/main/navigation.php';
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-3 fw-bold">Details:</div>
-                        <div class="col-md-9" id="viewDetails"></div>
+                        <div class="col-md-9">
+                            <div id="viewDetails" class="text-wrap"></div>
+                        </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-3 fw-bold">File:</div>
                         <div class="col-md-9">
-                            <div id="viewFile" class="d-flex align-items-center">
+                            <div id="viewFile" class="d-flex align-items-center text-wrap">
                                 <span class="file-name me-2"></span>
                                 <a href="#" class="btn btn-sm btn-primary view-file-btn" style="display:none;">
                                     <i class="fas fa-eye me-1"></i> View File
@@ -189,6 +193,32 @@ include '../includes/main/navigation.php';
     </div>
 </div>
 
+<style>
+    .modal-body .text-wrap {
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .table td {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #viewDetails {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+</style>
+
 <script>
     $(document).ready(function () {
         $('#ordinanceProposalsTable').DataTable({
@@ -216,9 +246,9 @@ include '../includes/main/navigation.php';
                 { "width": "5%", "targets": 0 },
                 { "width": "15%", "targets": 1 },
                 { "width": "10%", "targets": 2 },
-                { "width": "25%", "targets": 3 },
+                { "width": "20%", "targets": 3 },
                 { "width": "15%", "targets": 4 },
-                { "width": "20%", "targets": 5 }
+                { "width": "10%", "targets": 5 }
             ],
             "serverSide": true,
             "processing": true,
@@ -243,15 +273,17 @@ include '../includes/main/navigation.php';
 
     // Function to change modal title and form action for adding proposal
     function formIDChangeAdd() {
-        $("form").attr('id', 'proposalForm')
+        $("form").attr('id', 'proposalForm');
         $("#proposalModalLabel").text('Add Proposal');
         $("#proposalForm")[0].reset();
+        $("#file").prop('required', true); // Make file required for new proposals
     }
 
     // Function to change modal title and form action for editing proposal
     function formIDChangeEdit() {
-        $("form").attr('id', 'editProposalForm')
+        $("form").attr('id', 'editProposalForm');
         $("#proposalModalLabel").text('Edit Proposal');
+        $("#file").prop('required', false); // Remove required for editing
     }
 
     // Function to create a proposal
