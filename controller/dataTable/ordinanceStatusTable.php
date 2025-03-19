@@ -122,8 +122,11 @@ while ($row = mysqli_fetch_assoc($query)) {
         <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewStatusModal"><i class="fas fa-eye"></i></button>
         <button class="updateStatusButton btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button"><i class="fas fa-pen"></i></button>' .
         (!empty($row['file_path']) && !empty($row['action_type']) ?
-            ' <a href="' . $googleDocsUrl . '" target="_blank" class="btn btn-info btn-sm ms-1" title="Edit in Google Drive"><i class="fas fa-file-edit"></i></a>' :
-            ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="Status update required before editing"><i class="fas fa-file-edit"></i></a>');
+            ' <a href="' . $googleDocsUrl . '" target="_blank" class="btn btn-info btn-sm ms-1" title="View Document"><i class="fas fa-file-edit"></i></a>' :
+            (!empty($row['file_path']) ?
+                ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="Status update required before viewing"><i class="fas fa-file-edit"></i></a>' :
+                ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="No document available"><i class="fas fa-file-edit"></i></a>'
+            ));
 
     $data[] = array(
         htmlspecialchars($row['id']),

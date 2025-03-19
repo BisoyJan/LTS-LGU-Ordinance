@@ -190,32 +190,30 @@ include('../includes/main/navigation.php');
                                     </div>`;
                             }
 
+                            // Only show active document buttons if there is status history
+                            const hasStatus = result.data && result.data.length > 0;
                             historyHtml += `
-                                    <div class="btn-group mt-2">
-                                        ${result.data.length > 0 ? `
-                                            <a href="${result.drive_history.view_url}" target="_blank" 
-                                               class="btn btn-sm btn-primary" title="View document in read-only mode">
-                                                <i class="fas fa-eye me-1"></i>
-                                                View Document
-                                            </a>
-                                            <a href="${result.drive_history.revision_url}" target="_blank" 
-                                               class="btn btn-sm btn-warning" title="Suggest edits to document">
-                                                <i class="fas fa-edit me-1"></i>
-                                                Suggest Edit
-                                            </a>
-                                        ` : `
-                                            <button class="btn btn-sm btn-primary disabled" title="Status update required before viewing">
-                                                <i class="fas fa-eye me-1"></i>
-                                                View Document
-                                            </button>
-                                            <button class="btn btn-sm btn-warning disabled" title="Status update required before suggesting edits">
-                                                <i class="fas fa-edit me-1"></i>
-                                                Suggest Edit
-                                            </button>
-                                        `}
-                                    </div>
+                                <div class="btn-group mt-2">
+                                    <a href="${result.drive_history.view_url}" target="_blank" 
+                                       class="btn btn-sm btn-primary" title="View document">
+                                        <i class="fas fa-eye me-1"></i>
+                                        View Document
+                                    </a>
+                                    ${hasStatus ? `
+                                        <a href="${result.drive_history.revision_url}" target="_blank" 
+                                           class="btn btn-sm btn-warning" title="Suggest edits">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Suggest Edit
+                                        </a>
+                                    ` : `
+                                        <button class="btn btn-sm btn-warning disabled" title="Status update required to suggest edits">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Suggest Edit
+                                        </button>
+                                    `}
                                 </div>
-                            </div>`;
+                            </div>
+                        </div>`;
                         }
 
                         // Add status history
