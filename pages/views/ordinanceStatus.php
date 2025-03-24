@@ -61,24 +61,31 @@ include('../includes/main/navigation.php');
             <div class="modal-body">
                 <form id="updateStatusForm">
                     <input type="hidden" id="proposal_id" name="proposal_id">
-                    <div class="mb-3">
-                        <label for="action_type" class="form-label">Status</label>
-                        <select class="form-select" id="action_type" name="action_type" required>
-                            <option value="Draft">Draft</option>
-                            <option value="Under Review">Under Review</option>
-                            <option value="Pending Approval">Pending Approval</option>
-                            <option value="Initial Planning">Initial Planning</option>
-                            <option value="Public Comment Period">Public Comment Period</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Implemented">Implemented</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="remarks" class="form-label">Remarks</label>
-                        <textarea class="form-control" id="remarks" name="remarks" rows="3"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Update Status</button>
+                    <?php if ($_SESSION['role'] !== 'committee') { ?>
+                        <div class="mb-3">
+                            <label for="action_type" class="form-label">Status</label>
+                            <select class="form-select" id="action_type" name="action_type" required>
+                                <option value="Draft">Draft</option>
+                                <option value="Under Review">Under Review</option>
+                                <option value="Pending Approval">Pending Approval</option>
+                                <option value="Initial Planning">Initial Planning</option>
+                                <option value="Public Comment Period">Public Comment Period</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Implemented">Implemented</option>
+                            </select>
+                        </div>
+                    <?php } else { ?>
+                        <div class="mb-3">
+                            <label for="action_type" class="form-label">Status (This only be updated by the
+                                Legislator)</label>
+                            <input type="text" class="form-control" id="action_type" name="action_type" readonly>
+                        <?php } ?>
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label">Remarks</label>
+                            <textarea class="form-control" id="remarks" name="remarks" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Status</button>
                 </form>
             </div>
         </div>
@@ -171,19 +178,19 @@ include('../includes/main/navigation.php');
                                         </p>`;
 
                             // Only show version history if document has been edited
-                            if (result.drive_history.last_updated &&
-                                result.drive_history.created_at !== result.drive_history.last_updated) {
+                            if (result.data && result.data.length > 0) {
+                                const latestStatus = result.data[0]; // Get the most recent status update
                                 historyHtml += `
                                     <div class="card mt-2">
                                         <div class="card-body">
                                             <h6 class="card-subtitle">
                                                 <i class="fas fa-history me-2"></i>
-                                                Latest Edit
+                                                Latest Suggestion
                                             </h6>
                                             <p class="mb-2">
                                                 <small class="text-muted">
-                                                    Last edited: ${new Date(result.drive_history.last_updated).toLocaleString()}<br>
-                                                    By: ${result.drive_history.last_editor || 'Unknown'}
+                                                    Last updated: ${new Date(latestStatus.action_date).toLocaleString()}<br>
+                                                    By: ${latestStatus.added_by || 'Unknown'}
                                                 </small>
                                             </p>
                                         </div>

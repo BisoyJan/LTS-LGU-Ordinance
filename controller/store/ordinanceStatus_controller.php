@@ -150,7 +150,7 @@ if (isset($_POST['fetch_Status'])) {
                 'action_type' => $row['action_type'],
                 'remarks' => $row['remarks'],
                 'action_date' => $row['action_date'],
-                'added_by' => $row['username'] ?? 'Unknown User'
+                'added_by' => $row['added_by'] ?? 'Unknown User'
             ];
         }
 

@@ -3,12 +3,12 @@ function hasAccess($requiredRole)
 {
     $userRole = $_SESSION['role'];
     switch ($userRole) {
+        case 'legislator':
+            return in_array($requiredRole, ['legislator', 'committee', 'viewer', 'admin']);
+        case 'committee':
+            return in_array($requiredRole, ['committee', 'viewer']);
         case 'admin':
-            return true;
-        case 'staff':
-            return in_array($requiredRole, ['staff', 'viewer']);
-        case 'viewer':
-            return $requiredRole == 'viewer';
+            return in_array($requiredRole, ['admin', 'legislator', 'committee', 'viewer']);
         default:
             return false;
     }
@@ -60,7 +60,7 @@ function hasAccess($requiredRole)
                 <span>Dashboard</span>
             </a>
         </li>
-        <?php if (hasAccess('admin')): ?>
+        <?php if (hasAccess('legislator')): ?>
             <li class="nav-item">
                 <a href="../views/user.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'user.php' ? 'active' : ''; ?>">
@@ -68,9 +68,6 @@ function hasAccess($requiredRole)
                     <span>Users</span>
                 </a>
             </li>
-        <?php endif; ?>
-
-        <?php if (hasAccess('staff')): ?>
             <li class="nav-item">
                 <a href="../views/ordinanceProposal.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceProposal.php' ? 'active' : ''; ?>">
@@ -78,6 +75,16 @@ function hasAccess($requiredRole)
                     <span>Ordinance Proposal</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="../views/committee.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'committee.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-users-gear me-2"></i>
+                    <span>Committees</span>
+                </a>
+            </li>
+        <?php endif; ?>
+
+        <?php if (hasAccess('committee')): ?>
             <li class="nav-item">
                 <a href="../views/ordinanceStatus.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceStatus.php' ? 'active' : ''; ?>">
@@ -102,18 +109,12 @@ function hasAccess($requiredRole)
         <?php endif; ?>
 
         <?php if (hasAccess('admin')): ?>
+
             <li class="nav-item">
                 <a href="../views/setting.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'setting.php' ? 'active' : ''; ?>">
                     <i class="fas fa-cog me-2"></i>
                     <span>Settings</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="../views/committee.php" class="nav-link
-            <?php echo basename($_SERVER['PHP_SELF']) == 'committee.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-users-gear me-2"></i>
-                    <span>Committees</span>
                 </a>
             </li>
         <?php endif; ?>
