@@ -1,23 +1,36 @@
 <?php
-session_start();
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+ob_start(); // Start output buffering
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Check if user is logged in (except for login page)
-$current_page = basename($_SERVER['PHP_SELF']);
-if ($current_page !== 'index.php' && !isset($_SESSION['user_id'])) {
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
     header("Location: ../../index.php");
     exit();
 }
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+// Store toast message in a variable to output after HTML
+$toastScript = '';
 if (isset($_SESSION['toast'])) {
     $message = $_SESSION['toast']['message'];
     $type = $_SESSION['toast']['type'];
     unset($_SESSION['toast']);
-    echo "showToast('$message', '$type');";
+    $toastScript = "<script>showToast('$message', '$type');</script>";
+}
+
+// Check if the requested file exists
+$page = basename($_SERVER['PHP_SELF']);
+$validPages = ['dashboard.php', 'user.php', 'committee.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php', 'report.php', 'setting.php'];
+
+if (!in_array($page, $validPages)) {
+    header("Location: ../views/error/404.php");
+    exit();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -230,3 +243,9 @@ if (isset($_SESSION['toast'])) {
 </head>
 
 <body>
+    <?php
+    if (!empty($toastScript)) {
+        echo $toastScript;
+    }
+    ?>
+

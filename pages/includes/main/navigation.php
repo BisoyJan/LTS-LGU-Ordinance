@@ -13,6 +13,7 @@ function hasAccess($requiredRole)
             return false;
     }
 }
+
 ?>
 
 <!-- Top Bar -->
@@ -32,10 +33,10 @@ function hasAccess($requiredRole)
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <?php if (hasAccess('admin')): ?>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                     <?php endif; ?>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
                     <li><a class="dropdown-item"
                             href="../../controller/authentication/authentication.php?action=logout">
                             <i class="fas fa-sign-out-alt me-2"></i>Logout</a>
@@ -69,17 +70,17 @@ function hasAccess($requiredRole)
                 </a>
             </li>
             <li class="nav-item">
-                <a href="../views/ordinanceProposal.php" class="nav-link
-            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceProposal.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-file-alt me-2"></i>
-                    <span>Ordinance Proposal</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a href="../views/committee.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'committee.php' ? 'active' : ''; ?>">
                     <i class="fas fa-users-gear me-2"></i>
                     <span>Committees</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="../views/ordinanceProposal.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceProposal.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-file-alt me-2"></i>
+                    <span>Ordinance Proposal</span>
                 </a>
             </li>
         <?php endif; ?>

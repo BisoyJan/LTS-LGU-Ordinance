@@ -1,16 +1,18 @@
 <?php
-include('../includes/main/header.php');
+include '../includes/main/header.php';
+
+require_once('../../scripts/role_authenticator.php');
+restrictAccess('legislator');
+
+include '../includes/main/navigation.php';
 ?>
+
 <style>
     .btn-google-edit:hover {
         background-color: #1a73e8;
         color: white;
     }
 </style>
-<?php
-include('../includes/main/navigation.php');
-?>
-
 <div class="container-fluid">
     <div class="row mb-2">
         <div class="col-auto">

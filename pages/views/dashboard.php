@@ -3,8 +3,6 @@ include('../includes/main/header.php');
 include('../includes/main/navigation.php');
 ?>
 
-
-
 <div class="container-fluid px-4">
     <h1 class="mt-4 mb-4">Welcome to LGU Ordinance System</h1>
 

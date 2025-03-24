@@ -1,6 +1,10 @@
 <?php
-include('../includes/main/header.php');
-include('../includes/main/navigation.php');
+include '../includes/main/header.php';
+
+require_once('../../scripts/role_authenticator.php');
+restrictAccess('legislator');
+
+include '../includes/main/navigation.php';
 ?>
 
 <div class="container-fluid">
