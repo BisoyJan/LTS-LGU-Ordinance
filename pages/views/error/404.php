@@ -1,4 +1,3 @@
-<!-- filepath: c:\xampp\htdocs\LTS-LGU-Ordinance\pages\views\error\404.php -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -29,9 +28,9 @@
                 unavailable.
             </p>
             <div class="d-flex justify-content-center">
-                <a href="../../views/dashboard.php" class="btn btn-primary d-flex align-items-center">
-                    <i class="fas fa-home me-2"></i>
-                    Go to Dashboard
+                <a onclick="history.back()" class="btn btn-primary d-flex align-items-center">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Go Back
                 </a>
             </div>
         </div>

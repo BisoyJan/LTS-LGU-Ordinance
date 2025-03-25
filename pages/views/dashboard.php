@@ -1,226 +1,190 @@
 <?php
+require_once '../../controller/store/dashboard_controller.php';
 include('../includes/main/header.php');
 include('../includes/main/navigation.php');
+
+$dashboard = new DashboardController();
+$stats = $dashboard->getDashboardStats();
+
+// Function to get humanized date/time
+function getHumanizedDateTime()
+{
+    $date = new DateTime('now', new DateTimeZone('Asia/Manila'));
+    return [
+        'time' => $date->format('h:i A'),
+        'date' => $date->format('l, F j, Y')
+    ];
+}
+
+$dateTime = getHumanizedDateTime();
 ?>
 
-<div class="container-fluid px-4">
-    <h1 class="mt-4 mb-4">Welcome to LGU Ordinance System</h1>
-
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card border-0 bg-white p-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">Total Ordinances</h6>
-                            <h3 class="mb-0">254</h3>
-                        </div>
-                        <div class="card-icon">
-                            <i class="fas fa-book-open"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span class="text-success"><i class="fas fa-arrow-up me-1"></i>12%</span>
-                        <span class="text-muted ms-2">From last month</span>
+<!-- Dashboard Content -->
+<div class="content-wrapper">
+    <div class="container-fluid py-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">Welcome to LGU Ordinance System</h1>
+                        <p class="text-muted mb-0">
+                            <?php echo $dateTime['time']; ?> | <?php echo $dateTime['date']; ?>
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card border-0 bg-white p-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">Active Users</h6>
-                            <h3 class="mb-0">45</h3>
-                        </div>
-                        <div class="card-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-sm-6">
+                <div class="card dashboard-card bg-primary text-white h-100">
+                    <div class="card-body stat-card">
+                        <h5 class="card-title">Total Proposals</h5>
+                        <h2 class="mb-0"><?php echo $stats['total_proposals']['total']; ?></h2>
+                        <small class="text-white-50">All time proposals</small>
                     </div>
-                    <div class="mt-3">
-                        <span class="text-success"><i class="fas fa-arrow-up me-1"></i>8%</span>
-                        <span class="text-muted ms-2">From last month</span>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Approved</h5>
+                        <h2 class="card-text"><?php echo $stats['total_proposals']['approved']; ?></h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Pending</h5>
+                        <h2 class="card-text"><?php echo $stats['total_proposals']['pending']; ?></h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 mb-3">
+                <div class="card text-white bg-danger">
+                    <div class="card-body">
+                        <h5 class="card-title">Rejected</h5>
+                        <h2 class="card-text"><?php echo $stats['total_proposals']['rejected']; ?></h2>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card border-0 bg-white p-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">Pending Approval</h6>
-                            <h3 class="mb-0">18</h3>
-                        </div>
-                        <div class="card-icon">
-                            <i class="fas fa-clock"></i>
+        <!-- Charts Section -->
+        <div class="row g-4 mb-4">
+            <div class="col-xl-8">
+                <div class="card dashboard-card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Monthly Proposals</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Export Data</a></li>
+                                <li><a class="dropdown-item" href="#">View Details</a></li>
+                            </ul>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <span class="text-danger"><i class="fas fa-arrow-down me-1"></i>5%</span>
-                        <span class="text-muted ms-2">From last month</span>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="monthlyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 mb-4">
+                <div class="card">
+                    <div class="card-header">Proposals by Status</div>
+                    <div class="card-body">
+                        <canvas id="statusChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card border-0 bg-white p-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-1">Recent Updates</h6>
-                            <h3 class="mb-0">37</h3>
+        <!-- Recent Proposals Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card dashboard-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Proposals</h5>
+                        <a href="#" class="btn btn-primary btn-sm">View All</a>
+                    </div>
+                    <div class="card-body table-container">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Proposal</th>
+                                        <th>Committee</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stats['recent_proposals'] as $proposal): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($proposal['proposal']); ?></td>
+                                            <td><?php echo htmlspecialchars($proposal['committee_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($proposal['action_type'] ?? 'New'); ?></td>
+                                            <td><?php echo date('M d, Y', strtotime($proposal['created_at'])); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="card-icon">
-                            <i class="fas fa-sync-alt"></i>
-                        </div>
                     </div>
-                    <div class="mt-3">
-                        <span class="text-success"><i class="fas fa-arrow-up me-1"></i>15%</span>
-                        <span class="text-muted ms-2">From last month</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Ordinances</h5>
-                    <button class="btn btn-sm btn-outline-primary">View All</button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Ordinance #</th>
-                                    <th>Title</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>ORD-2023-054</td>
-                                    <td>Community Health Program</td>
-                                    <td>Feb 28, 2023</td>
-                                    <td><span class="badge bg-success">Approved</span></td>
-                                    <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>ORD-2023-053</td>
-                                    <td>Road Improvement Project</td>
-                                    <td>Feb 24, 2023</td>
-                                    <td><span class="badge bg-warning text-dark">Pending</span></td>
-                                    <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>ORD-2023-052</td>
-                                    <td>Water System Upgrade</td>
-                                    <td>Feb 20, 2023</td>
-                                    <td><span class="badge bg-success">Approved</span></td>
-                                    <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>ORD-2023-051</td>
-                                    <td>Public Market Renovation</td>
-                                    <td>Feb 15, 2023</td>
-                                    <td><span class="badge bg-success">Approved</span></td>
-                                    <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
-                                </tr>
-                                <tr>
-                                    <td>ORD-2023-050</td>
-                                    <td>Education Support Program</td>
-                                    <td>Feb 10, 2023</td>
-                                    <td><span class="badge bg-danger">Rejected</span></td>
-                                    <td><button class="btn btn-sm btn-outline-secondary">View</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary"><i class="fas fa-plus-circle me-2"></i>New
-                            Ordinance</button>
-                        <button class="btn btn-outline-primary"><i class="fas fa-user-plus me-2"></i>Add
-                            User</button>
-                        <button class="btn btn-outline-primary"><i class="fas fa-file-export me-2"></i>Generate
-                            Report</button>
-                        <button class="btn btn-outline-primary"><i class="fas fa-search me-2"></i>Advanced
-                            Search</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">System Notifications</h5>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex align-items-center py-3">
-                            <div class="bg-primary rounded-circle p-2 me-3 text-white">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <div>
-                                <p class="mb-0">New ordinance waiting for approval</p>
-                                <small class="text-muted">2 hours ago</small>
-                            </div>
-                        </li>
-                        <li class="list-group-item d-flex align-items-center py-3">
-                            <div class="bg-success rounded-circle p-2 me-3 text-white">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div>
-                                <p class="mb-0">System backup completed successfully</p>
-                                <small class="text-muted">5 hours ago</small>
-                            </div>
-                        </li>
-                        <li class="list-group-item d-flex align-items-center py-3">
-                            <div class="bg-warning rounded-circle p-2 me-3 text-white">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div>
-                                <p class="mb-0">User account password expiring soon</p>
-                                <small class="text-muted">1 day ago</small>
-                            </div>
-                        </li>
-                        <li class="list-group-item d-flex align-items-center py-3">
-                            <div class="bg-info rounded-circle p-2 me-3 text-white">
-                                <i class="fas fa-info-circle"></i>
-                            </div>
-                            <div>
-                                <p class="mb-0">System maintenance scheduled</p>
-                                <small class="text-muted">2 days ago</small>
-                            </div>
-                        </li>
-                    </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize Charts
+    const monthlyData = <?php echo json_encode($stats['monthly_proposals']); ?>;
+    const statusData = <?php echo json_encode($stats['proposals_by_status']); ?>;
 
+    // Monthly Chart
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+            labels: monthlyData.map(item => item.month),
+            datasets: [{
+                label: 'Proposals',
+                data: monthlyData.map(item => item.count),
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        }
+    });
 
-<?php
-include('../includes/main/footer.php');
-?>
+    // Status Chart
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: statusData.map(item => item.action_type),
+            datasets: [{
+                data: statusData.map(item => item.count),
+                backgroundColor: [
+                    '#28a745',
+                    '#ffc107',
+                    '#dc3545',
+                    '#17a2b8',
+                    '#6c757d'
+                ]
+            }]
+        }
+    });
+</script>
 
+<?php include('../includes/main/footer.php'); ?>
+</body>
+
+</html>
