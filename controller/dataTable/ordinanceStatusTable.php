@@ -58,10 +58,26 @@ $total_all_rows = mysqli_num_rows($totalQuery);
 $whereClause = "";
 if (!empty($search_value)) {
     $search_value = mysqli_real_escape_string($conn, $search_value);
-    $whereClause = " WHERE op.proposal LIKE '%$search_value%' 
+    $whereClause .= " WHERE (op.proposal LIKE '%$search_value%' 
                      OR os.action_type LIKE '%$search_value%'
                      OR u1.username LIKE '%$search_value%'
-                     OR c.name LIKE '%$search_value%'";  // Changed from c.committee_name to c.name
+                     OR c.name LIKE '%$search_value%')";
+}
+
+if (isset($_GET['committee']) && !empty($_GET['committee'])) {
+    $committee_id = intval($_GET['committee']);
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.committee_id = $committee_id";
+}
+
+if (isset($_GET['status']) && !empty($_GET['status'])) {
+    $status = mysqli_real_escape_string($conn, $_GET['status']);
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " os.action_type = '$status'";
+}
+
+if (!empty($_GET['fromDate']) && !empty($_GET['toDate'])) {
+    $fromDate = mysqli_real_escape_string($conn, $_GET['fromDate']);
+    $toDate = mysqli_real_escape_string($conn, $_GET['toDate']);
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " os.action_date BETWEEN '$fromDate' AND '$toDate'";
 }
 
 // Sorting

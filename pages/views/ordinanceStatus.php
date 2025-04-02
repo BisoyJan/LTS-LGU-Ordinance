@@ -21,6 +21,51 @@ include '../includes/main/navigation.php';
             </div>
         </div>
 
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label for="filterCommittee" class="form-label">Filter by Committee</label>
+                <select class="form-select" id="filterCommittee">
+                    <option value="">All Committees</option>
+                    <?php
+                    require_once '../../database/database.php';
+                    $conn = getConnection();
+                    $query = "SELECT id, name FROM committees ORDER BY name";
+                    $result = mysqli_query($conn, $query);
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filterStatus" class="form-label">Filter by Status</label>
+                <select class="form-select" id="filterStatus">
+                    <option value="">All Statuses</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Pending Approval">Pending Approval</option>
+                    <option value="Initial Planning">Initial Planning</option>
+                    <option value="Public Comment Period">Public Comment Period</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Implemented">Implemented</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="filterFromDate" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="filterFromDate">
+            </div>
+            <div class="col-md-3">
+                <label for="filterToDate" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="filterToDate">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+            </div>
+        </div>
+
         <table id="ordinanceStatusTable" class="table table-striped table-bordered" style="width: 100%;">
             <thead>
                 <tr>
@@ -96,7 +141,7 @@ include '../includes/main/navigation.php';
 
 <script>
     $(document).ready(function () {
-        $('#ordinanceStatusTable').DataTable({
+        const table = $('#ordinanceStatusTable').DataTable({
             "fnCreatedRow": function (nRow, aData, iDataIndex) {
                 $(nRow).attr('id', aData[0]);
             },
@@ -140,6 +185,15 @@ include '../includes/main/navigation.php';
             "language": {
                 "processing": '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
             }
+        });
+
+        $('#applyFilters').on('click', function () {
+            const committee = $('#filterCommittee').val();
+            const status = $('#filterStatus').val();
+            const fromDate = $('#filterFromDate').val();
+            const toDate = $('#filterToDate').val();
+
+            table.ajax.url("../../controller/dataTable/ordinanceStatusTable.php?committee=" + committee + "&status=" + status + "&fromDate=" + fromDate + "&toDate=" + toDate).load();
         });
     });
 

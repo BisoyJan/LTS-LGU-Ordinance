@@ -25,6 +25,35 @@ include '../includes/main/navigation.php';
         </div>
     </div>
 
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label for="filterCommittee" class="form-label">Filter by Committee</label>
+            <select class="form-select" id="filterCommittee">
+                <option value="">All Committees</option>
+                <?php
+                require_once '../../database/database.php';
+                $conn = getConnection();
+                $query = "SELECT id, name FROM committees ORDER BY name";
+                $result = mysqli_query($conn, $query);
+                while ($row = mysqli_fetch_assoc($result)) {
+                    echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
+                }
+                ?>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="filterFromDate" class="form-label">From Date</label>
+            <input type="date" class="form-control" id="filterFromDate">
+        </div>
+        <div class="col-md-3">
+            <label for="filterToDate" class="form-label">To Date</label>
+            <input type="date" class="form-control" id="filterToDate">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+        </div>
+    </div>
+
     <table id="ordinanceProposalsTable" class="table table-striped table-bordered" style="width: 100%;">
         <thead>
             <tr>
@@ -255,13 +284,18 @@ include '../includes/main/navigation.php';
 
 <script>
     $(document).ready(function () {
-        $('#ordinanceProposalsTable').DataTable({
+        const table = $('#ordinanceProposalsTable').DataTable({
             "fnCreatedRow": function (nRow, aData, iDataIndex) {
                 $(nRow).attr('id', aData[0]);
             },
             "ajax": {
                 "url": "../../controller/dataTable/ordinanceProposalTable.php",
                 "type": "POST",
+                "data": function (d) {
+                    d.committee = $('#filterCommittee').val();
+                    d.fromDate = $('#filterFromDate').val();
+                    d.toDate = $('#filterToDate').val();
+                },
                 "dataSrc": "data", // Ensure DataTables knows where to look
                 "error": function (xhr, error, thrown) {
                     console.error('DataTables Ajax Error:', xhr, error, thrown);
@@ -294,6 +328,10 @@ include '../includes/main/navigation.php';
             "language": {
                 "processing": '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
             }
+        });
+
+        $('#applyFilters').on('click', function () {
+            table.ajax.reload();
         });
     });
 

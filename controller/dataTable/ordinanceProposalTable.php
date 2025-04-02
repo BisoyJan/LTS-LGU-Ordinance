@@ -12,10 +12,10 @@ $columns = array("id", "proposal", "proposal_date", "details", "file_name");
 
 $search_value = isset($_POST['search']['value']) ? trim($_POST['search']['value']) : "";
 
-
+// Main query with joins
 $sql = "SELECT op.id, op.proposal, op.proposal_date, op.details, op.file_name, op.file_path, 
         op.file_type, op.file_size, op.created_at, 
-        c.name as committee_name, 
+        c.id as committee_id, c.name as committee_name,
         u.username as created_by
         FROM ordinance_proposals op
         LEFT JOIN committees c ON op.committee_id = c.id
@@ -27,25 +27,54 @@ $total_all_rows = mysqli_num_rows($totalQuery);
 $whereClause = "";
 if (!empty($search_value)) {
     $search_value = mysqli_real_escape_string($conn, $search_value);
-    $whereClause = " WHERE proposal LIKE '%$search_value%' 
-                     OR details LIKE '%$search_value%' 
-                     OR file_name LIKE '%$search_value%'";
+    $whereClause .= " WHERE (op.proposal LIKE '%$search_value%' 
+                     OR op.details LIKE '%$search_value%' 
+                     OR op.file_name LIKE '%$search_value%')";
+}
+
+// Use op.committee_id instead of c.id for committee filtering
+if (isset($_POST['committee']) && !empty($_POST['committee'])) {
+    $committee_id = intval($_POST['committee']);
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.committee_id = $committee_id";
+}
+
+if (!empty($_POST['fromDate']) && !empty($_POST['toDate'])) {
+    $fromDate = mysqli_real_escape_string($conn, $_POST['fromDate']);
+    $toDate = mysqli_real_escape_string($conn, $_POST['toDate']);
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.proposal_date BETWEEN '$fromDate' AND '$toDate'";
+}
+
+if (isset($_GET['committee']) && !empty($_GET['committee'])) {
+    $committee_id = intval($_GET['committee']);
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.committee_id = $committee_id";
+}
+
+if (!empty($_GET['fromDate']) && !empty($_GET['toDate'])) {
+    $fromDate = mysqli_real_escape_string($conn, $_GET['fromDate']);
+    $toDate = mysqli_real_escape_string($conn, $_GET['toDate']);
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.proposal_date BETWEEN '$fromDate' AND '$toDate'";
 }
 
 // Sorting
-$orderClause = " ORDER BY id DESC"; // Default order
+$orderClause = " ORDER BY op.id DESC"; // Default order
 if (isset($_POST['order']) && isset($_POST['order'][0]['column']) && isset($_POST['order'][0]['dir'])) {
     $column_index = intval($_POST['order'][0]['column']);
     $order_direction = ($_POST['order'][0]['dir'] === 'asc') ? 'DESC' : 'ASC';
     if (isset($columns[$column_index])) {
-        $orderClause = " ORDER BY " . $columns[$column_index] . " " . $order_direction;
+        $orderClause = " ORDER BY op." . $columns[$column_index] . " " . $order_direction;
     }
 }
 
-// Get total filtered count
+// Get total filtered count - IMPORTANT FIX: Include the same joins in the count query
 if (!empty($whereClause)) {
-    $filtered_query = "SELECT COUNT(*) as total FROM ordinance_proposals" . $whereClause;
+    $filtered_query = "SELECT COUNT(*) as total FROM ordinance_proposals op 
+                      LEFT JOIN committees c ON op.committee_id = c.id
+                      LEFT JOIN users u ON op.user_id = u.id" . $whereClause;
     $filtered_result = mysqli_query($conn, $filtered_query);
+    if (!$filtered_result) {
+        echo json_encode(['error' => 'Filtered count query failed: ' . mysqli_error($conn)]);
+        exit;
+    }
     $filtered_row = mysqli_fetch_assoc($filtered_result);
     $count_filtered_rows = $filtered_row['total'];
 } else {
