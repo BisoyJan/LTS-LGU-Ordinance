@@ -21,7 +21,7 @@ include '../includes/main/navigation.php';
             </div>
         </div>
 
-        <div class="row mb-3">
+        <div class="row mb-3 align-items-end">
             <div class="col-md-3">
                 <label for="filterCommittee" class="form-label">Filter by Committee</label>
                 <select class="form-select" id="filterCommittee">
@@ -37,7 +37,7 @@ include '../includes/main/navigation.php';
                     ?>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="filterStatus" class="form-label">Filter by Status</label>
                 <select class="form-select" id="filterStatus">
                     <option value="">All Statuses</option>
@@ -51,18 +51,17 @@ include '../includes/main/navigation.php';
                     <option value="Implemented">Implemented</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="filterFromDate" class="form-label">From Date</label>
                 <input type="date" class="form-control" id="filterFromDate">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="filterToDate" class="form-label">To Date</label>
                 <input type="date" class="form-control" id="filterToDate">
             </div>
-        </div>
-        <div class="row mb-3">
-            <div class="col-md-3">
-                <button class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+            <div class="col-md-3 d-flex justify-content-end">
+                <button class="btn btn-primary me-2" id="applyFilters">Apply Filters</button>
+                <button class="btn btn-secondary" id="clearFilters">Clear Filters</button>
             </div>
         </div>
 
@@ -194,6 +193,14 @@ include '../includes/main/navigation.php';
             const toDate = $('#filterToDate').val();
 
             table.ajax.url("../../controller/dataTable/ordinanceStatusTable.php?committee=" + committee + "&status=" + status + "&fromDate=" + fromDate + "&toDate=" + toDate).load();
+        });
+
+        $('#clearFilters').on('click', function () {
+            $('#filterCommittee').val('');
+            $('#filterStatus').val('');
+            $('#filterFromDate').val('');
+            $('#filterToDate').val('');
+            table.ajax.url("../../controller/dataTable/ordinanceStatusTable.php").load();
         });
     });
 

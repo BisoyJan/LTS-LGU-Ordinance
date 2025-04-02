@@ -25,7 +25,7 @@ include '../includes/main/navigation.php';
         </div>
     </div>
 
-    <div class="row mb-3">
+    <div class="row mb-3 align-items-end">
         <div class="col-md-3">
             <label for="filterCommittee" class="form-label">Filter by Committee</label>
             <select class="form-select" id="filterCommittee">
@@ -41,16 +41,17 @@ include '../includes/main/navigation.php';
                 ?>
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="filterFromDate" class="form-label">From Date</label>
             <input type="date" class="form-control" id="filterFromDate">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label for="filterToDate" class="form-label">To Date</label>
             <input type="date" class="form-control" id="filterToDate">
         </div>
-        <div class="col-md-3 d-flex align-items-end">
-            <button class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+        <div class="col-md-5 d-flex justify-content-end">
+            <button class="btn btn-primary me-2" id="applyFilters">Apply Filters</button>
+            <button class="btn btn-secondary" id="clearFilters">Clear Filters</button>
         </div>
     </div>
 
@@ -331,6 +332,13 @@ include '../includes/main/navigation.php';
         });
 
         $('#applyFilters').on('click', function () {
+            table.ajax.reload();
+        });
+
+        $('#clearFilters').on('click', function () {
+            $('#filterCommittee').val('');
+            $('#filterFromDate').val('');
+            $('#filterToDate').val('');
             table.ajax.reload();
         });
     });
