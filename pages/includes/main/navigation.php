@@ -93,13 +93,13 @@ function hasAccess($requiredRole)
                     <span>Ordinance Status</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="../views/schedule.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'schedule.php' ? 'active' : ''; ?>">
                     <i class="fas fa-calendar-alt me-2"></i>
                     <span>Schedules</span>
                 </a>
-            </li>
+            </li> -->
             <li class="nav-item">
                 <a href="../views/report.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'report.php' ? 'active' : ''; ?>">
