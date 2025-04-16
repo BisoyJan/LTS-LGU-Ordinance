@@ -159,6 +159,40 @@ $conn = getConnection();
                                     proposalsContainer.append(card);
                                 });
 
+                                // Attach click handler to dynamically added buttons
+                                $('.view-details-btn').on('click', function () {
+                                    const proposalId = $(this).data('id');
+                                    $.ajax({
+                                        url: './controller/store/viewer_controller.php',
+                                        type: 'POST',
+                                        data: {
+                                            fetch_proposal_details: true,
+                                            id: proposalId
+                                        },
+                                        success: function (response) {
+                                            try {
+                                                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                                                if (result.status === 'success' && result.data) {
+                                                    $('#modalProposalTitle').text(result.data.proposal || 'N/A');
+                                                    $('#modalCommittee').text(result.data.committee_name || 'N/A');
+                                                    $('#modalCreatedBy').text(result.data.created_by || 'N/A');
+                                                    $('#modalProposalDate').text(result.data.proposal_date || 'N/A');
+                                                    $('#modalDetails').html(result.data.details || 'No details available.');
+                                                } else {
+                                                    alert(result.message || 'Failed to fetch proposal details.');
+                                                }
+                                            } catch (e) {
+                                                console.error('Error parsing response:', e);
+                                                alert('An error occurred while fetching proposal details.');
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+                                            console.error('AJAX Error:', error);
+                                            alert('Failed to fetch proposal details.');
+                                        }
+                                    });
+                                });
+
                                 // Update pagination
                                 updatePagination(result.totalPages, page);
                                 $('#no-proposals-message').addClass('d-none');
