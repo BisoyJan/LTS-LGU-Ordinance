@@ -50,7 +50,7 @@ function hasAccess($requiredRole)
 <!-- Sidebar -->
 <div class="sidebar">
     <div class="logo-container text-center">
-        <img src="../../assets/img/logo.png" alt="Logo" class="mb-3">
+        <img src="../../assets/images/cropped-Tacloban_City_Seal.png" alt="Logo" class="mb-3">
         <h5 class="fw-bold">LGU System</h5>
     </div>
     <ul class="nav flex-column mt-3">
@@ -93,16 +93,9 @@ function hasAccess($requiredRole)
                     <span>Ordinance Status</span>
                 </a>
             </li>
-            <!-- <li class="nav-item">
-                <a href="../views/schedule.php" class="nav-link
-            <?php echo basename($_SERVER['PHP_SELF']) == 'schedule.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-calendar-alt me-2"></i>
-                    <span>Schedules</span>
-                </a>
-            </li> -->
             <li class="nav-item">
-                <a href="../views/report.php" class="nav-link
-            <?php echo basename($_SERVER['PHP_SELF']) == 'report.php' ? 'active' : ''; ?>">
+                <a href="../views/reports.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>">
                     <i class="fas fa-chart-bar me-2"></i>
                     <span>Reports</span>
                 </a>
