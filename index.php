@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: url('assets/images/San-Juanico-Bridge.png') no-repeat center center fixed;
+            background: url('assets/images/San-Juanico-Bridge.jpg') no-repeat center center fixed;
             background-size: cover;
         }
 
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <body>
     <div class="min-vh-100 d-flex align-items-center justify-content-center">
-        <div class="card shadow-lg mx-3" style="width: 900px; max-height: 500px;">
+        <div class="card shadow-lg mx-3" style="width: 850px; max-height: 500px;">
             <div class="row g-0">
                 <!-- Left side - Image/Logo -->
                 <div class="col-md-6 d-md-block">
