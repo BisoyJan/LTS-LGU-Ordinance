@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="card shadow-lg mx-3" style="width: 900px; max-height: 500px;">
             <div class="row g-0">
                 <!-- Left side - Image/Logo -->
-                <div class="col-md-6 d-none d-md-block">
+                <div class="col-md-6 d-md-block">
                     <div class="h-100 d-flex align-items-center justify-content-center">
                         <img src="assets\images\cropped-Tacloban_City_Seal.png" alt="Logo"
                             style="width: 250px; height: 300px; object-fit: contain;">
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
 
                 <!-- Right side - Login Form -->
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="card-body p-4">
                         <div class="text-center mb-4">
                             <h2 class="fw-bold">Welcome Back</h2>
