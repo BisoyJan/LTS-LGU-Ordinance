@@ -25,16 +25,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Login Page</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('assets/images/San-Juanico-Bridge.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .card {
+            transition: background-color 1.3s ease;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .card:hover,
+        .card:focus-within {
+            background-color: rgba(255, 255, 255, 1);
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
     <div class="min-vh-100 d-flex align-items-center justify-content-center">
         <div class="card shadow-lg mx-3" style="width: 900px; max-height: 500px;">
             <div class="row g-0">
                 <!-- Left side - Image/Logo -->
                 <div class="col-md-6 d-none d-md-block">
                     <div class="h-100 d-flex align-items-center justify-content-center">
-                        <img src="assets\images\illustrations\hero_image_2.svg" alt="Logo"
+                        <img src="assets\images\cropped-Tacloban_City_Seal.png" alt="Logo"
                             style="width: 250px; height: 300px; object-fit: contain;">
                     </div>
                 </div>
