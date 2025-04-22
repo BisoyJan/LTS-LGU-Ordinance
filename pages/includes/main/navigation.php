@@ -32,10 +32,10 @@ function hasAccess($requiredRole)
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <?php if (hasAccess('admin')): ?>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <!-- <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
                         <li>
                             <hr class="dropdown-divider">
-                        </li>
+                        </li> -->
                     <?php endif; ?>
                     <li><a class="dropdown-item"
                             href="../../controller/authentication/authentication.php?action=logout">
@@ -104,13 +104,13 @@ function hasAccess($requiredRole)
 
         <?php if (hasAccess('admin')): ?>
 
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="../views/setting.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'setting.php' ? 'active' : ''; ?>">
                     <i class="fas fa-cog me-2"></i>
                     <span>Settings</span>
                 </a>
-            </li>
+            </li> -->
         <?php endif; ?>
     </ul>
 </div>

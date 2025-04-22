@@ -125,7 +125,7 @@ $conn = getConnection();
                                 const proposalsContainer = $('#proposals-container');
                                 proposalsContainer.empty();
                                 result.data.forEach(proposal => {
-                                    const truncatedDetails = truncateWords(proposal.details, 20);
+                                    const truncatedDetails = truncateWords(proposal.details, 13);
                                     const card = `
                                         <div class="col-md-6 mb-4">
                                             <div class="card shadow-sm">
