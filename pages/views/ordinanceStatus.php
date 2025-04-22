@@ -65,19 +65,20 @@ include '../includes/main/navigation.php';
             </div>
         </div>
 
-        <table id="ordinanceStatusTable" class="table table-striped table-bordered" style="width: 100%;">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Ordinance Title</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table id="ordinanceStatusTable" class="table table-striped table-bordered" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ordinance Title</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -177,7 +178,7 @@ include '../includes/main/navigation.php';
             "serverSide": true,
             "processing": true,
             "paging": true,
-            "lengthChange": false,
+            "lengthChange": true,
             "searching": true,
             "ordering": true,
             "info": true,

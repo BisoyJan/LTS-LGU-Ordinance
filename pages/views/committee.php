@@ -22,18 +22,19 @@ include '../includes/main/navigation.php';
             </div>
         </div>
     </div>
-
-    <table id="committeesTable" class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Created At</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-    </table>
+    <div class="table-responsive">
+        <table id="committeesTable" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
 </div>
 
 <!-- Add/Edit Committee Modal -->

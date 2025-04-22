@@ -54,19 +54,20 @@ include '../includes/main/navigation.php';
         </div>
     </div>
 
-    <table id="ordinanceProposalsTable" class="table table-striped table-bordered" style="width: 100%;">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Proposal</th>
-                <th>Date</th>
-                <th>Details</th>
-                <th>File</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="table-responsive">
+        <table id="ordinanceProposalsTable" class="table table-striped table-bordered" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Proposal</th>
+                    <th>Date</th>
+                    <th>Details</th>
+                    <th>File</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
 
     <div class="modal fade" id="proposalModal" tabindex="-1" aria-labelledby="proposalModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -321,7 +322,7 @@ include '../includes/main/navigation.php';
             "serverSide": true,
             "processing": true,
             "paging": true,
-            "lengthChange": false,
+            "lengthChange": true,
             "searching": true,
             "ordering": true,
             "info": true,

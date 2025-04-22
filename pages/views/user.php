@@ -25,7 +25,7 @@ include '../includes/main/navigation.php';
     </div>
 
     <div class="table-responsive">
-        <table id="usersTable" class="table table-hover text-center">
+        <table id="usersTable" class="table table-striped table-bordered">
             <thead>
                 <tr>
                     <th>Username</th>
@@ -35,6 +35,7 @@ include '../includes/main/navigation.php';
                     <th>Actions</th>
                 </tr>
             </thead>
+            <tbody></tbody>
         </table>
     </div>
 </div>
@@ -140,7 +141,7 @@ include '../includes/main/navigation.php';
             "serverSide": true,
             "processing": true,
             "paging": true,
-            "lengthChange": false,
+            "lengthChange": true,
             "searching": true,
             "ordering": true,
             "info": true,
