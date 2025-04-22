@@ -185,6 +185,4 @@ $dateTime = getHumanizedDateTime();
 </script>
 
 <?php include('../includes/main/footer.php'); ?>
-</body>
 
-</html>

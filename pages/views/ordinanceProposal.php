@@ -7,7 +7,6 @@ restrictAccess('legislator');
 include '../includes/main/navigation.php';
 ?>
 
-
 <div class="container-fluid">
     <div class="row mb-2">
         <div class="col-auto">
@@ -637,7 +636,5 @@ include '../includes/main/navigation.php';
     }
 </script>
 
-<?php
-include '../includes/main/footer.php';
-?>
+<?php include '../includes/main/footer.php'; ?>
 

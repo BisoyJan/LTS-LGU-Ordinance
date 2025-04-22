@@ -316,7 +316,5 @@ include '../includes/main/navigation.php';
     });
 </script>
 
-<?php
-include('../includes/main/footer.php');
-?>
+<?php include('../includes/main/footer.php'); ?>
 
