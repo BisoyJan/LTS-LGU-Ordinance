@@ -66,6 +66,9 @@ include '../includes/main/navigation.php';
                     <th>Actions</th>
                 </tr>
             </thead>
+            <tbody>
+                <!-- DataTables will populate this -->
+            </tbody>
         </table>
     </div>
 
@@ -257,6 +260,61 @@ include '../includes/main/navigation.php';
     </div>
 </div>
 
+<!-- Fill for Schedule Modal -->
+<div class="modal fade" id="fillScheduleModal" tabindex="-1" aria-labelledby="fillScheduleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="fillScheduleForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fillScheduleModalLabel">Fill Schedule for Proposal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="schedule_proposal_id" name="proposal_id">
+                    <div class="mb-3">
+                        <label for="schedule_current_status" class="form-label">Current Status</label>
+                        <input type="text" class="form-control" id="schedule_current_status" name="current_status"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule_hearing_date" class="form-label">Hearing Date</label>
+                        <input type="date" class="form-control" id="schedule_hearing_date" name="hearing_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule_hearing_time" class="form-label">Hearing Time</label>
+                        <input type="time" class="form-control" id="schedule_hearing_time" name="hearing_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule_session_type" class="form-label">Session Type</label>
+                        <select class="form-select" id="schedule_session_type" name="session_type" required>
+                            <option value="Regular">Regular</option>
+                            <option value="Special">Special</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule_reading_result" class="form-label">Reading Result</label>
+                        <select class="form-select" id="schedule_reading_result" name="reading_result" required>
+                            <option value="">Select Result</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Deferred">Deferred</option>
+                            <option value="For Amendment">For Amendment</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule_remarks" class="form-label">Remarks (optional)</label>
+                        <textarea class="form-control" id="schedule_remarks" name="remarks" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
     .modal-body .text-wrap {
         word-wrap: break-word;
@@ -286,9 +344,8 @@ include '../includes/main/navigation.php';
 <script>
     $(document).ready(function () {
         const table = $('#ordinanceProposalsTable').DataTable({
-            "fnCreatedRow": function (nRow, aData, iDataIndex) {
-                $(nRow).attr('id', aData[0]);
-            },
+            "processing": true,
+            "serverSide": true,
             "ajax": {
                 "url": "../../controller/dataTable/ordinanceProposalTable.php",
                 "type": "POST",
@@ -297,38 +354,31 @@ include '../includes/main/navigation.php';
                     d.fromDate = $('#filterFromDate').val();
                     d.toDate = $('#filterToDate').val();
                 },
-                "dataSrc": "data", // Ensure DataTables knows where to look
+                "dataSrc": function (json) {
+                    // If your backend returns { data: [...] }
+                    if (json.data) return json.data;
+                    // If your backend returns an array directly
+                    return json;
+                },
                 "error": function (xhr, error, thrown) {
                     console.error('DataTables Ajax Error:', xhr, error, thrown);
                     alert('Error loading ordinance proposal data');
                 }
             },
             "columns": [
-                { "title": "ID" },
-                { "title": "Proposal" },
-                { "title": "Date" },
-                { "title": "Details" },
-                { "title": "File", "orderable": true },
-                { "title": "Actions", "orderable": false }
+                { "data": 0, "title": "ID" },
+                { "data": 1, "title": "Proposal" },
+                { "data": 2, "title": "Date" },
+                { "data": 3, "title": "Details" },
+                { "data": 4, "title": "File" },
+                { "data": 5, "title": "Actions", "orderable": false }
             ],
-            "columnDefs": [
-                { "width": "5%", "targets": 0 },
-                { "width": "15%", "targets": 1 },
-                { "width": "10%", "targets": 2 },
-                { "width": "20%", "targets": 3 },
-                { "width": "15%", "targets": 4 },
-                { "width": "10%", "targets": 5 }
-            ],
-            "serverSide": true,
-            "processing": true,
-            "paging": true,
+            "order": [[0, "desc"]],
             "lengthChange": true,
             "searching": true,
-            "ordering": true,
+            "paging": true,
             "info": true,
-            "language": {
-                "processing": '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
-            }
+            "autoWidth": false
         });
 
         $('#applyFilters').on('click', function () {
@@ -341,8 +391,43 @@ include '../includes/main/navigation.php';
             $('#filterToDate').val('');
             table.ajax.reload();
         });
-    });
 
+        // Show Fill Schedule Modal and set proposal_id
+        $(document).on('click', '.fillScheduleBtn', function () {
+            var proposalId = $(this).data('id');
+            $('#schedule_proposal_id').val(proposalId);
+            $('#fillScheduleForm')[0].reset();
+            $('#fillScheduleModal').modal('show');
+        });
+
+        // Handle Fill Schedule form submit
+        $('#fillScheduleForm').on('submit', function (e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            formData.append('add_schedule', true);
+
+            $.ajax({
+                url: '../../controller/store/schedule_controller.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (result.status === 'success') {
+                        $('#ordinanceProposalsTable').DataTable().draw();
+                        $('#fillScheduleModal').modal('hide');
+                        showToast(result.message, 'success');
+                    } else {
+                        showToast(result.message || 'Failed to add schedule.', 'error');
+                    }
+                },
+                error: function () {
+                    showToast('Error adding schedule.', 'error');
+                }
+            });
+        });
+    });
 
     // Function to view file in new window or tab
     function viewFile(filePath) {

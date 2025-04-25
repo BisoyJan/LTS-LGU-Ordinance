@@ -22,9 +22,24 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE `schedule` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `proposal_id` int(11) NOT NULL,
+  `hearing_date` date NOT NULL,
+  `hearing_time` time NOT NULL,
+  `session_type` enum('Regular','Special') DEFAULT 'Regular',
+  `reading_result` enum('Approved','Deferred','For Amendment') DEFAULT NULL,
+  `remarks` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_schedule_proposal` (`proposal_id`),
+  CONSTRAINT `fk_schedule_proposal` FOREIGN KEY (`proposal_id`) REFERENCES `ordinance_proposals` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE `ordinance_proposals` (
   `id` int(11) NOT NULL,
   `proposal` varchar(255) NOT NULL,
+  `current_status` varchar(100) DEFAULT NULL,
   `proposal_date` date NOT NULL,
   `details` text DEFAULT NULL,
   `committee_id` int(11) DEFAULT NULL,
@@ -104,5 +119,8 @@ ALTER TABLE `ordinance_proposals`
 
 ALTER TABLE `ordinance_status`
   ADD CONSTRAINT `fk_ordinance_status_proposal` FOREIGN KEY (`proposal_id`) REFERENCES `ordinance_proposals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `ordinance_proposals`
+  ADD COLUMN `current_status` varchar(100) DEFAULT NULL AFTER `proposal`;
 
 COMMIT;

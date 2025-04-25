@@ -85,10 +85,10 @@ function hasAccess($requiredRole)
             </li>
         <?php endif; ?>
 
-        <?php if (hasAccess('legislator') || hasAccess('admin')): ?>
+        <?php if (hasAccess('legislator')): ?>
             <li class="nav-item">
-                <a href="../views/schedules.php" class="nav-link
-                <?php echo basename($_SERVER['PHP_SELF']) == 'schedules.php' ? 'active' : ''; ?>">
+                <a href="../views/schedule.php" class="nav-link
+                <?php echo basename($_SERVER['PHP_SELF']) == 'schedule.php' ? 'active' : ''; ?>">
                     <i class="fas fa-calendar-alt me-2"></i>
                     <span>Schedules</span>
                 </a>

@@ -46,6 +46,8 @@ if (!in_array($page, $validPages)) {
     <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/moment-2.29.4/dt-2.2.2/datatables.min.css" rel="stylesheet"
         integrity="sha384-/z1ZDMqmsYaq/NXh/ETpYUT4UDsfsPzi8Pezq/UyJYIvmAF7g5QBXJbuCIIMxPGl" crossorigin="anonymous">
 
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+
     <!-- Add SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 

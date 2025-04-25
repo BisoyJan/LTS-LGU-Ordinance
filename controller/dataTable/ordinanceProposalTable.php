@@ -117,6 +117,17 @@ while ($row = mysqli_fetch_assoc($query)) {
         <button class="deleteButton btn btn-danger btn-sm ms-1" data-id="' . $row["id"] . '"><i class="fas fa-trash"></i></button>
     ';
 
+    // Check if this proposal is already scheduled
+    $proposal_id = intval($row['id']);
+    $schedule_check = mysqli_query($conn, "SELECT id FROM schedule WHERE proposal_id = $proposal_id LIMIT 1");
+    if ($schedule_check && mysqli_num_rows($schedule_check) == 0) {
+        $actions .= '
+            <button class="btn btn-sm btn-success fillScheduleBtn ms-1" data-id="' . $row['id'] . '" title="Fill for Schedule">
+                <i class="fas fa-calendar-plus"></i>
+            </button>
+        ';
+    }
+
     $data[] = array(
         $row['id'],
         $row['proposal'] . '<br><small class="text-muted">By: ' . $row['created_by'] .
