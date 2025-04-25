@@ -85,6 +85,16 @@ function hasAccess($requiredRole)
             </li>
         <?php endif; ?>
 
+        <?php if (hasAccess('legislator') || hasAccess('admin')): ?>
+            <li class="nav-item">
+                <a href="../views/schedules.php" class="nav-link
+                <?php echo basename($_SERVER['PHP_SELF']) == 'schedules.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    <span>Schedules</span>
+                </a>
+            </li>
+        <?php endif; ?>
+
         <?php if (hasAccess('committee')): ?>
             <li class="nav-item">
                 <a href="../views/ordinanceStatus.php" class="nav-link
