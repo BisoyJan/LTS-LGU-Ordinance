@@ -263,6 +263,14 @@ include '../includes/main/navigation.php';
 
                             // Only show active document buttons if there is status history
                             const hasStatus = result.data && result.data.length > 0;
+                            let suggestEditDisabled = false;
+                            if (hasStatus) {
+                                // Check if the latest status is Approved
+                                const latestStatus = result.data[0];
+                                if (latestStatus.action_type === 'Approved') {
+                                    suggestEditDisabled = true;
+                                }
+                            }
                             historyHtml += `
                                 <div class="btn-group mt-2">
                                     <a href="${result.drive_history.view_url}" target="_blank" 
@@ -270,13 +278,20 @@ include '../includes/main/navigation.php';
                                         <i class="fas fa-eye me-1"></i>
                                         View Document
                                     </a>
-                                    ${hasStatus ? `
-                                        <a href="${result.drive_history.revision_url}" target="_blank" 
-                                           class="btn btn-sm btn-warning" title="Suggest edits">
-                                            <i class="fas fa-edit me-1"></i>
-                                            Suggest Edit
-                                        </a>
-                                    ` : `
+                                    ${hasStatus ? (
+                                    suggestEditDisabled ? `
+                                            <button class="btn btn-sm btn-warning disabled" title="Cannot suggest edits on an approved ordinance">
+                                                <i class="fas fa-edit me-1"></i>
+                                                Suggest Edit
+                                            </button>
+                                        ` : `
+                                            <a href="${result.drive_history.revision_url}" target="_blank" 
+                                               class="btn btn-sm btn-warning" title="Suggest edits">
+                                                <i class="fas fa-edit me-1"></i>
+                                                Suggest Edit
+                                            </a>
+                                        `
+                                ) : `
                                         <button class="btn btn-sm btn-warning disabled" title="Status update required to suggest edits">
                                             <i class="fas fa-edit me-1"></i>
                                             Suggest Edit

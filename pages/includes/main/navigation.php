@@ -85,7 +85,7 @@ function hasAccess($requiredRole)
             </li>
         <?php endif; ?>
 
-        <?php if (hasAccess('legislator')): ?>
+        <?php if (hasAccess('legislator') || hasAccess('committee')): ?>
             <li class="nav-item">
                 <a href="../views/schedule.php" class="nav-link
                 <?php echo basename($_SERVER['PHP_SELF']) == 'schedule.php' ? 'active' : ''; ?>">
@@ -103,13 +103,13 @@ function hasAccess($requiredRole)
                     <span>Ordinance Status</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a href="../views/reports.php" class="nav-link
             <?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>">
                     <i class="fas fa-chart-bar me-2"></i>
                     <span>Reports</span>
                 </a>
-            </li>
+            </li> -->
         <?php endif; ?>
 
         <?php if (hasAccess('admin')): ?>
