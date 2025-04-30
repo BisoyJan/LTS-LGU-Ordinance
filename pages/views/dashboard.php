@@ -309,19 +309,23 @@ $dateTime = getHumanizedDateTime();
     // Status Chart
     new Chart(document.getElementById('statusChart'), {
         type: 'doughnut',
-        data: {
-            labels: statusData.map(item => item.action_type),
-            datasets: [{
-                data: statusData.map(item => item.count),
-                backgroundColor: [
-                    '#28a745',
-                    '#ffc107',
-                    '#dc3545',
-                    '#17a2b8',
-                    '#6c757d'
-                ]
-            }]
-        }
+        data: (() => {
+            // Only include Approved, Rejected, Pending
+            const allowed = ['Approved', 'Rejected', 'Pending'];
+            const colorMap = {
+                'Approved': '#28a745',
+                'Rejected': '#dc3545',
+                'Pending': '#ffc107'
+            };
+            const filtered = statusData.filter(item => allowed.includes(item.action_type));
+            return {
+                labels: filtered.map(item => item.action_type),
+                datasets: [{
+                    data: filtered.map(item => item.count),
+                    backgroundColor: filtered.map(item => colorMap[item.action_type])
+                }]
+            };
+        })()
     });
 
     // Carousel view switching (sync both sets of buttons)
