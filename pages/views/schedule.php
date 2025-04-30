@@ -291,11 +291,31 @@ include '../includes/main/navigation.php';
                 }
             },
             eventDataTransform: function (eventData) {
-                // Use raw time for start, formatted for modal
-                if (eventData.hearing_time) {
-                    eventData.start = eventData.start.split('T')[0] + 'T' + eventData.hearing_time;
+                // Only set start if both date and time are present and not already in ISO format
+                if (
+                    eventData.hearing_time &&
+                    eventData.start &&
+                    !eventData.start.includes('T')
+                ) {
+                    eventData.start = eventData.start + 'T' + eventData.hearing_time;
                 }
                 return eventData;
+            },
+            eventContent: function (arg) {
+                // Use hearing_time from extendedProps (from DB)
+                let timeStr = '';
+                if (arg.event.extendedProps && arg.event.extendedProps.hearing_time) {
+                    let t = arg.event.extendedProps.hearing_time.split(':');
+                    let hours = parseInt(t[0], 10);
+                    let minutes = t[1] ? t[1] : '00';
+                    let ampm = hours >= 12 ? 'PM' : 'AM';
+                    let h = hours % 12;
+                    if (h === 0) h = 12;
+                    let m = minutes.length === 1 ? '0' + minutes : minutes;
+                    timeStr = h + ':' + m + ' ' + ampm;
+                }
+                let title = arg.event.title || '';
+                return { html: `<span style="font-weight:600;">${timeStr}</span> <span>${title}</span>` };
             },
             eventClick: function (info) {
                 var event = info.event;
@@ -460,11 +480,158 @@ include '../includes/main/navigation.php';
     #calendar {
         max-width: 1500px;
         max-height: 700px;
-        margin: 10px auto;
-        background: #fff;
-        padding: 20px;
+        margin: 20px auto;
+        background: #f8fafc;
+        padding: 24px;
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(60, 72, 88, 0.10), 0 1.5px 4px rgba(60, 72, 88, 0.06);
+        border: none;
+        transition: box-shadow 0.2s;
+    }
+
+    .fc {
+        background: transparent;
+        border-radius: 18px;
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        font-size: 1rem;
+    }
+
+    .fc-toolbar-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+        letter-spacing: 0.01em;
+    }
+
+    .fc-button {
+        background: #2563eb;
+        border: none;
+        color: #fff;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        padding: 0.5em 1.2em;
+        font-weight: 500;
+        box-shadow: 0 1px 2px rgba(60, 72, 88, 0.08);
+        transition: background 0.15s, box-shadow 0.15s;
+    }
+
+    .fc-button:hover,
+    .fc-button:focus {
+        background: #1d4ed8;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.10);
+    }
+
+    .fc-button-primary:not(:disabled).fc-button-active,
+    .fc-button-primary:not(:disabled):active {
+        background: #1e40af;
+        color: #fff;
+    }
+
+    /* Only apply background and border-radius to month view days */
+    .fc-daygrid-day {
+        background: #fff;
+        border: none;
+        border-radius: 10px;
+        transition: background 0.15s;
+    }
+
+    .fc-daygrid-day:hover {
+        background: #e0e7ef;
+    }
+
+    /* Remove background and border-radius from timegrid slots (week/day view) */
+    .fc-timegrid-slot {
+        background: transparent !important;
+        border-radius: 0 !important;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .fc-day-today {
+        background: #e0e7ff !important;
+        border-radius: 10px;
+        box-shadow: 0 0 0 2px #2563eb33;
+    }
+
+    .fc-event,
+    .fc-daygrid-event,
+    .fc-timegrid-event {
+        background: linear-gradient(90deg, #2563eb 60%, #60a5fa 100%);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 0.18em 0.7em;
+        font-size: 0.92em;
+        /* smaller font size */
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+        transition: box-shadow 0.15s, background 0.15s;
+        margin-bottom: 4px;
+    }
+
+    .fc-event:hover,
+    .fc-daygrid-event:hover,
+    .fc-timegrid-event:hover {
+        background: linear-gradient(90deg, #1d4ed8 60%, #38bdf8 100%);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+        cursor: pointer;
+    }
+
+    .fc-daygrid-event-dot {
+        display: none;
+    }
+
+    .fc-scrollgrid,
+    .fc-scrollgrid-section {
+        border: none !important;
+    }
+
+    .fc-col-header-cell-cushion {
+        color: #2563eb;
+        font-weight: 600;
+        font-size: 1.1em;
+        padding: 0.5em 0;
+    }
+
+    .fc-daygrid-day-number {
+        color: #64748b;
+        font-weight: 500;
+        font-size: 1.05em;
+        padding: 0.3em 0.5em;
+        border-radius: 6px;
+        transition: background 0.15s;
+    }
+
+    .fc-daygrid-day-number:hover {
+        background: #e0e7ff;
+        color: #1d4ed8;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+        #calendar {
+            max-width: 100%;
+            padding: 10px;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.3rem;
+        }
+    }
+
+    @media (max-width: 600px) {
+        #calendar {
+            padding: 2px;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1rem;
+        }
+
+        .fc-button {
+            padding: 0.3em 0.7em;
+            font-size: 0.95em;
+        }
     }
 </style>
 
