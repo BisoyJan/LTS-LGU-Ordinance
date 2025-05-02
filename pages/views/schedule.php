@@ -339,7 +339,9 @@ include '../includes/main/navigation.php';
                     timeStr = h + ':' + m + ' ' + ampm;
                 }
                 let title = arg.event.title || '';
-                return { html: `<span style="font-weight:600;">${timeStr}</span> <span>${title}</span>` };
+                let hearing = arg.event.extendedProps.hearing_status || '';
+
+                return { html: `<span style="font-weight:600;">${timeStr}</span>-<span>${title}</span> / <span>${hearing}</span>` };
             },
             eventClick: function (info) {
                 var event = info.event;
