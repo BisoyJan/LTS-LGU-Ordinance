@@ -79,6 +79,7 @@ include '../includes/main/navigation.php';
                             <option value="legislator">Legislator</option>
                             <option value="admin">Administrator</option>
                             <option value="committee">Committee</option>
+                            <option value="secretary">Secretary</option>
                             <option value="user">User</option>
                         </select>
                         <div class="invalid-feedback">

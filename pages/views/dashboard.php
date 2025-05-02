@@ -144,7 +144,7 @@ $dateTime = getHumanizedDateTime();
                                                     <?php foreach ($stats['recent_proposals'] as $proposal): ?>
                                                         <tr>
                                                             <td><?php echo htmlspecialchars($proposal['proposal']); ?></td>
-                                                            <td><?php echo htmlspecialchars($proposal['committee_name']); ?>
+                                                            <td><?php echo htmlspecialchars($proposal['committee_name'] ?: 'Not Assigned Yet'); ?>
                                                             </td>
                                                             <td><?php echo htmlspecialchars($proposal['action_type'] ?? 'New'); ?>
                                                             </td>

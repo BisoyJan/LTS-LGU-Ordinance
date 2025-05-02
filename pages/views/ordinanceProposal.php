@@ -82,60 +82,75 @@ include '../includes/main/navigation.php';
                 <div class="modal-body">
                     <form method="POST" id="proposalForm" class="needs-validation" novalidate>
                         <input type="hidden" id="proposalID" name="proposalID" value="">
+                        <?php
+                        // Start session if not already started
+                        if (!isset($_SESSION))
+                            session_start();
+                        $userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+                        $disabled = ($userRole === 'secretary') ? 'disabled' : '';
+                        ?>
                         <div class="mb-3">
                             <label for="proposal" class="form-label">Proposal</label>
-                            <input type="text" class="form-control" id="proposal" name="proposal" required>
+                            <input type="text" class="form-control" id="proposal" name="proposal" required <?php echo $disabled; ?>>
                             <div class="invalid-feedback">
                                 Please enter a proposal title.
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="proposalDate" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="proposalDate" name="proposalDate" required>
+                            <input type="date" class="form-control" id="proposalDate" name="proposalDate" required <?php echo $disabled; ?>>
                             <div class="invalid-feedback">
                                 Please select a date.
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="details" class="form-label">Details</label>
-                            <textarea class="form-control" id="details" name="details" rows="3" required></textarea>
+                            <textarea class="form-control" id="details" name="details" rows="3" required <?php echo $disabled; ?>></textarea>
                             <div class="invalid-feedback">
                                 Please provide proposal details.
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="committee" class="form-label">Committee</label>
-                            <select class="form-select" id="committee" name="committee_id" required>
-                                <option value="">Select Committee</option>
-                                <?php
-                                require_once '../../database/database.php';
-                                try {
-                                    $conn = getConnection();
-                                    if ($conn) {
-                                        $query = "SELECT id, name FROM committees ORDER BY name";
-                                        $result = mysqli_query($conn, $query);
-                                        if ($result) {
-                                            while ($row = mysqli_fetch_assoc($result)) {
-                                                echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
+                        <?php
+                        // Hide the committee select if the user is a legislator
+                        if (!isset($_SESSION))
+                            session_start();
+                        $userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+                        if ($userRole !== 'legislator'):
+                            ?>
+                            <div class="mb-3">
+                                <label for="committee" class="form-label">Committee</label>
+                                <select class="form-select" id="committee" name="committee_id" required>
+                                    <option value="">Select Committee</option>
+                                    <?php
+                                    require_once '../../database/database.php';
+                                    try {
+                                        $conn = getConnection();
+                                        if ($conn) {
+                                            $query = "SELECT id, name FROM committees ORDER BY name";
+                                            $result = mysqli_query($conn, $query);
+                                            if ($result) {
+                                                while ($row = mysqli_fetch_assoc($result)) {
+                                                    echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
+                                                }
+                                            } else {
+                                                echo "<option value=''>Error loading committees</option>";
                                             }
                                         } else {
-                                            echo "<option value=''>Error loading committees</option>";
+                                            echo "<option value=''>Database connection failed</option>";
                                         }
-                                    } else {
-                                        echo "<option value=''>Database connection failed</option>";
+                                    } catch (Exception $e) {
+                                        echo "<option value=''>Error: " . htmlspecialchars($e->getMessage()) . "</option>";
                                     }
-                                } catch (Exception $e) {
-                                    echo "<option value=''>Error: " . htmlspecialchars($e->getMessage()) . "</option>";
-                                }
-                                ?>
-                            </select>
-                            <div class="invalid-feedback">
-                                Please select a committee.
+                                    ?>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a committee.
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                         <div class="mb-3">
                             <label for="file" class="form-label">File</label>
-                            <input class="form-control" type="file" id="file" name="file">
+                            <input class="form-control" type="file" id="file" name="file" <?php echo $disabled; ?>>
                             <div class="invalid-feedback">
                                 Please upload a file.
                             </div>
@@ -273,11 +288,6 @@ include '../includes/main/navigation.php';
                 <div class="modal-body">
                     <input type="hidden" id="schedule_proposal_id" name="proposal_id">
                     <div class="mb-3">
-                        <label for="schedule_current_status" class="form-label">Current Status</label>
-                        <input type="text" class="form-control" id="schedule_current_status" name="current_status"
-                            required>
-                    </div>
-                    <div class="mb-3">
                         <label for="schedule_hearing_date" class="form-label">Hearing Date</label>
                         <input type="date" class="form-control" id="schedule_hearing_date" name="hearing_date" required>
                     </div>
@@ -292,15 +302,29 @@ include '../includes/main/navigation.php';
                             <option value="Special">Special</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="schedule_reading_result" class="form-label">Reading Result</label>
-                        <select class="form-select" id="schedule_reading_result" name="reading_result" required>
-                            <option value="">Select Result</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Deferred">Deferred</option>
-                            <option value="For Amendment">For Amendment</option>
-                        </select>
-                    </div>
+                    <?php if ($_SESSION['role'] !== 'committee'): ?>
+                        <div class="mb-3">
+                            <label for="reading_status" class="form-label">Reading Status</label>
+                            <select class="form-select" id="reading_status" name="reading_status">
+                                <option value="">Select Status</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Deferred">Deferred</option>
+                                <option value="Enacted">Enacted</option>
+                                <option value="For Amendment">For Amendment</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
+                        <div class="mb-3">
+                            <label for="hearing_status" class="form-label">Hearing Status</label>
+                            <select class="form-select" id="hearing_status" name="hearing_status">
+                                <option value="">Select Hearing Status</option>
+                                <option value="1st Hearing">1st Hearing</option>
+                                <option value="2nd Hearing">2nd Hearing</option>
+                                <option value="3rd Hearing">3rd Hearing</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
                     <div class="mb-3">
                         <label for="schedule_remarks" class="form-label">Remarks (optional)</label>
                         <textarea class="form-control" id="schedule_remarks" name="remarks" rows="2"></textarea>

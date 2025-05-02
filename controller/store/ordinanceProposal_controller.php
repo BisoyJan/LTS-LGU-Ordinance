@@ -105,20 +105,15 @@ if (isset($_POST['fetch_Proposal'])) {
     exit;
 }
 
-if (isset($_POST['create_ordinanceProposal'])) {
-    try {
-        $nextIdQuery = "SELECT AUTO_INCREMENT 
-                       FROM information_schema.TABLES 
-                       WHERE TABLE_SCHEMA = DATABASE() 
-                       AND TABLE_NAME = 'ordinance_proposals'";
-        $nextIdResult = $conn->query($nextIdQuery);
-        $nextId = $nextIdResult->fetch_assoc()['AUTO_INCREMENT'];
+if (isset($_POST['create_ordinanceProposal']) || isset($_POST['edit_ordinanceProposal'])) {
+    $committeeId = isset($_POST['committee_id']) && !empty($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
 
-        $proposal = mysqli_real_escape_string($conn, $_POST['proposal']);
-        $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
-        $details = mysqli_real_escape_string($conn, $_POST['details']);
-        $committee_id = mysqli_real_escape_string($conn, $_POST['committee_id']);
-        $user_id = $_SESSION['user_id'];
+    try {
+        $userRole = $_SESSION['role'];
+        $proposal = isset($_POST['proposal']) ? mysqli_real_escape_string($conn, $_POST['proposal']) : null;
+        $proposalDate = isset($_POST['proposalDate']) ? mysqli_real_escape_string($conn, $_POST['proposalDate']) : null;
+        $details = isset($_POST['details']) ? mysqli_real_escape_string($conn, $_POST['details']) : null;
+        $userId = $_SESSION['user_id'];
 
         $driveFileId = null;
         $fileName = null;
@@ -174,119 +169,35 @@ if (isset($_POST['create_ordinanceProposal'])) {
             $fileSize = $file['size'];
         }
 
-        $query = "INSERT INTO ordinance_proposals 
-                 (proposal, proposal_date, details, committee_id, user_id, file_name, file_path, file_type, file_size) 
-                 VALUES ('$proposal', '$proposalDate', '$details', '$committee_id', '$user_id', 
-                         '$fileName', '$driveFileId', '$fileType', $fileSize)";
+        if (isset($_POST['create_ordinanceProposal'])) {
+            $query = "INSERT INTO ordinance_proposals (proposal, proposal_date, details, committee_id, user_id, file_name, file_path) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("sssisss", $proposal, $proposalDate, $details, $committeeId, $userId, $fileName, $driveFileId);
+        } else if (isset($_POST['edit_ordinanceProposal'])) {
+            $proposalId = mysqli_real_escape_string($conn, $_POST['proposalID']);
 
-        if ($conn->query($query)) {
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Ordinance proposal created successfully'
-            ]);
-        } else {
-            throw new Exception("Database error: " . $conn->error);
+            if ($userRole === 'secretary') {
+                // Secretary can only edit the committee_id
+                $query = "UPDATE ordinance_proposals SET committee_id = ? WHERE id = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ii", $committeeId, $proposalId);
+            } else {
+                // Other roles can edit all fields
+                $query = "UPDATE ordinance_proposals SET proposal = ?, proposal_date = ?, details = ?, committee_id = ?, file_name = ?, file_path = ? 
+                          WHERE id = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("sssissi", $proposal, $proposalDate, $details, $committeeId, $fileName, $driveFileId, $proposalId);
+            }
         }
 
-    } catch (GoogleServiceException $e) {
-        error_log('Drive API Error: ' . $e->getMessage());
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Google Drive error: ' . $e->getMessage()
-        ]);
-    } catch (Exception $e) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
-    }
-    exit;
-}
-
-if (isset($_POST['edit_ordinanceProposal'])) {
-    try {
-        $proposal_id = mysqli_real_escape_string($conn, $_POST['proposalID']);
-        $proposal = mysqli_real_escape_string($conn, $_POST['proposal']);
-        $proposalDate = mysqli_real_escape_string($conn, $_POST['proposalDate']);
-        $details = mysqli_real_escape_string($conn, $_POST['details']);
-        $committee_id = mysqli_real_escape_string($conn, $_POST['committee_id']);
-
-        $query = "UPDATE ordinance_proposals 
-                 SET proposal = '$proposal', 
-                     proposal_date = '$proposalDate', 
-                     details = '$details',
-                     committee_id = '$committee_id'";
-
-        $fileQuery = "SELECT file_name, file_path FROM ordinance_proposals WHERE id = '$proposal_id'";
-        $fileResult = $conn->query($fileQuery);
-        $existingFile = $fileResult->fetch_assoc();
-
-        $fileUpdate = "";
-
-        if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
-            $file = $_FILES['file'];
-            $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
-            $newFileName = $baseFileName . '.' . $fileExt;
-
-            $checkQuery = "SELECT id FROM ordinance_proposals WHERE file_name = '$newFileName' AND id != '$proposal_id'";
-            $checkResult = $conn->query($checkQuery);
-            if ($checkResult && $checkResult->num_rows > 0) {
-                throw new Exception('A file with this name already exists. Please rename your file.');
-            }
-
-            if (!in_array($fileExt, ['doc', 'docx'])) {
-                throw new Exception('Only .doc and .docx files are allowed');
-            }
-
-            if ($existingFile['file_path']) {
-                $client = getGoogleDriveClient();
-                $driveService = new Drive($client);
-                try {
-                    $driveService->files->delete($existingFile['file_path'], [
-                        'supportsAllDrives' => true
-                    ]);
-                } catch (Exception $e) {
-                    error_log("Delete error: " . $e->getMessage());
-                }
-            }
-
-            $folderId = '15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj';
-            if (!preg_match('/^[a-zA-Z0-9_-]{15,}$/', $folderId)) {
-                throw new Exception('Invalid Google Drive Folder ID format');
-            }
-
-            $client = getGoogleDriveClient();
-            $driveService = new Drive($client);
-            verifyDriveFolderAccess($driveService, $folderId);
-
-            $fileMetadata = new Drive\DriveFile([
-                'name' => $newFileName,
-                'parents' => [$folderId]
-            ]);
-
-            $content = file_get_contents($file['tmp_name']);
-            $driveFile = $driveService->files->create($fileMetadata, [
-                'data' => $content,
-                'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'uploadType' => 'multipart',
-                'fields' => 'id',
-                'supportsAllDrives' => true
-            ]);
-
-            $fileUpdate = ", file_name = '{$newFileName}', file_path = '{$driveFile->id}', 
-                          file_type = '$fileExt', file_size = {$file['size']}";
-        }
-
-        $query .= $fileUpdate . " WHERE id = '$proposal_id'";
-
-        if ($conn->query($query)) {
+        if ($stmt->execute()) {
             echo json_encode([
                 'status' => 'success',
-                'message' => 'Ordinance proposal updated successfully'
+                'message' => isset($_POST['create_ordinanceProposal']) ? 'Ordinance proposal created successfully' : 'Ordinance proposal updated successfully'
             ]);
         } else {
-            throw new Exception("Database error: " . $conn->error);
+            throw new Exception("Database error: " . $stmt->error);
         }
 
     } catch (GoogleServiceException $e) {
@@ -346,3 +257,5 @@ if (isset($_POST['delete_ordinanceProposal'])) {
     }
     exit;
 }
+?>
+

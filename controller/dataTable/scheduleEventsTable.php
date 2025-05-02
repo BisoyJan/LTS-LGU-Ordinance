@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 
 $conn = getConnection();
 
-$sql = "SELECT s.id, s.proposal_id, s.hearing_date, s.hearing_time, s.session_type, s.reading_result, s.remarks, p.proposal, p.current_status, p.file_path
+$sql = "SELECT s.id, s.proposal_id, s.hearing_date, s.hearing_time, s.session_type, s.reading_status, s.remarks, p.proposal, s.hearing_status, p.file_path
         FROM schedule s
         JOIN ordinance_proposals p ON s.proposal_id = p.id";
 
@@ -22,7 +22,8 @@ function proposalColor($proposal_id)
         "#fd7e14",
         "#20c997",
         "#6610f2",
-        "#e83e8c"
+        "#e83e8c",
+        "#007bff"
     ];
     return $colors[$proposal_id % count($colors)];
 }
@@ -60,8 +61,8 @@ while ($row = $result->fetch_assoc()) {
         'remarks' => $row['remarks'],
         'proposal_id' => $row['proposal_id'],
         'session_type' => $row['session_type'],
-        'reading_result' => $row['reading_result'],
-        'current_status' => $row['current_status'],
+        'reading_status' => $row['reading_status'],
+        'hearing_status' => $row['hearing_status'],
         'color' => proposalColor($row['proposal_id']),
         'file_id' => $row['file_path'] // <-- Add file_id for document viewing
     ];

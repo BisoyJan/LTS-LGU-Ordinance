@@ -2,6 +2,9 @@
 require '../../database/database.php';
 session_start();
 
+$userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+$userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -16,7 +19,7 @@ $search_value = isset($_POST['search']['value']) ? trim($_POST['search']['value'
 $sql = "SELECT op.id, op.proposal, op.proposal_date, op.details, op.file_name, op.file_path, 
         op.file_type, op.file_size, op.created_at, 
         c.id as committee_id, c.name as committee_name,
-        u.username as created_by
+        u.username as created_by, op.user_id
         FROM ordinance_proposals op
         LEFT JOIN committees c ON op.committee_id = c.id
         LEFT JOIN users u ON op.user_id = u.id";
@@ -113,25 +116,44 @@ while ($row = mysqli_fetch_assoc($query)) {
 
     $actions = '
         <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '"><i class="fas fa-eye"></i></button>
-        <button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '"><i class="fas fa-edit"></i></button>
-        <button class="deleteButton btn btn-danger btn-sm ms-1" data-id="' . $row["id"] . '"><i class="fas fa-trash"></i></button>
     ';
 
-    // Check if this proposal is already scheduled
-    $proposal_id = intval($row['id']);
-    $schedule_check = mysqli_query($conn, "SELECT id FROM schedule WHERE proposal_id = $proposal_id LIMIT 1");
-    if ($schedule_check && mysqli_num_rows($schedule_check) == 0) {
+    if ($row['user_id'] == $userId || $userRole === 'secretary') {
         $actions .= '
-            <button class="btn btn-sm btn-success fillScheduleBtn ms-1" data-id="' . $row['id'] . '" title="Fill for Schedule">
-                <i class="fas fa-calendar-plus"></i>
-            </button>
+            <button class="editButton btn btn-success btn-sm ms-1" data-id="' . $row["id"] . '"><i class="fas fa-edit"></i></button>
         ';
+    }
+
+    if ($row['user_id'] == $userId) {
+        $actions .= '
+            <button class="deleteButton btn btn-danger btn-sm ms-1" data-id="' . $row["id"] . '"><i class="fas fa-trash"></i></button>
+        ';
+    }
+
+    if ($userRole !== 'legislator') {
+        // Check if this proposal is already scheduled
+        $proposal_id = intval($row['id']);
+        $schedule_check = mysqli_query($conn, "SELECT id FROM schedule WHERE proposal_id = $proposal_id LIMIT 1");
+        if ($schedule_check && mysqli_num_rows($schedule_check) == 0) {
+            $actions .= '
+                <button class="btn btn-sm btn-secondary fillScheduleBtn ms-1" data-id="' . $row['id'] . '" title="Fill for Schedule">
+                    <i class="fas fa-calendar-plus"></i>
+                </button>
+            ';
+        }
+    }
+
+    // If no committee, show "Not Assigned Yet" as a red pill
+    if (empty($row['committee_name'])) {
+        $committee_display = '<span class="badge rounded-pill bg-danger">Not Assigned Yet</span>';
+    } else {
+        $committee_display = htmlspecialchars($row['committee_name']);
     }
 
     $data[] = array(
         $row['id'],
-        $row['proposal'] . '<br><small class="text-muted">By: ' . $row['created_by'] .
-        '<br>Committee: ' . $row['committee_name'] . '</small>',
+        $row['proposal'] . '<br><small class="text-muted">By: ' . htmlspecialchars($row['created_by']) .
+        '<br>Committee: ' . $committee_display . '</small>',
         $formatted_date,
         $row['details'],
         $file_html,

@@ -11,6 +11,10 @@ function restrictAccess($rolePermission)
             header("Location: ../../controller/authentication/authentication.php?action=logout");
             exit();
         }
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: ../../controller/authentication/authentication.php?action=logout");
+            exit();
+        }
     } else {
         // Fallback for when headers are already sent
         echo '<script>window.location.href="../../controller/authentication/authentication.php?action=logout";</script>';
@@ -21,8 +25,9 @@ function restrictAccess($rolePermission)
 
     // Define role-based access logic
     $roleAccess = [
-        'legislator' => ['dashboard.php', 'user.php', 'committee.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php'],
+        'legislator' => ['dashboard.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php', 'user.php'],
         'committee' => ['dashboard.php', 'ordinanceStatus.php', 'schedule.php', 'reports.php'],
+        'secretary' => ['dashboard.php', 'ordinanceProposal.php', 'schedule.php', 'ordinanceStatus.php'],
         'admin' => ['dashboard.php', 'user.php', 'committee.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php', 'reports.php', 'setting.php'],
     ];
 

@@ -28,8 +28,9 @@ CREATE TABLE `schedule` (
   `hearing_date` date NOT NULL,
   `hearing_time` time NOT NULL,
   `session_type` enum('Regular','Special') DEFAULT 'Regular',
-  `reading_result` enum('Approved','Deferred','For Amendment') DEFAULT NULL,
+  `reading_status` enum('Approved','Deferred','For Amendment') DEFAULT NULL,
   `remarks` varchar(255) DEFAULT NULL,
+  `hearing_status` ENUM('1st Hearing', '2nd Hearing', '3rd Hearing') DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `fk_schedule_proposal` (`proposal_id`),
@@ -122,5 +123,14 @@ ALTER TABLE `ordinance_status`
 
 ALTER TABLE `ordinance_proposals`
   ADD COLUMN `current_status` varchar(100) DEFAULT NULL AFTER `proposal`;
+
+ALTER TABLE `ordinance_proposals`
+  DROP COLUMN `proposal_time`;
+
+ALTER TABLE `schedule`
+  CHANGE COLUMN `reading_result` `reading_status` ENUM('Approved', 'Deferred', 'For Amendment') DEFAULT NULL;
+
+ALTER TABLE `schedule`
+  ADD COLUMN `hearing_status` ENUM('1st Hearing', '2nd Hearing', '3rd Hearing') DEFAULT NULL AFTER `remarks`;
 
 COMMIT;

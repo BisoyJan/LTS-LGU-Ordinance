@@ -14,13 +14,16 @@ include '../includes/main/navigation.php';
                 <h2>Hearing Schedules</h2>
             </div>
         </div>
-        <div class="col">
-            <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal">
-                    Add Schedules
-                </button>
+
+        <?php if ($_SESSION['role'] !== 'legislator'): ?>
+            <div class="col">
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                        Add Schedules
+                    </button>
+                </div>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
     <div class="row">
         <div class="col-12">
@@ -56,13 +59,6 @@ include '../includes/main/navigation.php';
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4 fw-bold text-secondary">Current Status:</div>
-                        <div class="col-md-8">
-                            <span id="modalCurrentStatus" class="badge bg-info text-dark px-3 py-2"
-                                style="font-size:1rem;"></span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
                         <div class="col-md-4 fw-bold text-secondary">Scheduled Date:</div>
                         <div class="col-md-8">
                             <i class="far fa-calendar-alt me-1"></i>
@@ -83,9 +79,15 @@ include '../includes/main/navigation.php';
                         </div>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-md-4 fw-bold text-secondary">Reading Result:</div>
+                        <div class="col-md-4 fw-bold text-secondary">Hearing Status:</div>
                         <div class="col-md-8">
-                            <span id="modalReadingResult" class="badge bg-success px-3 py-2"></span>
+                            <span id="modalHearingStatus" class="badge bg-info text-dark px-3 py-2"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold text-secondary">Reading Status:</div>
+                        <div class="col-md-8">
+                            <span id="modalReadingStatus" class="badge bg-success px-3 py-2"></span>
                         </div>
                     </div>
                     <div class="row mb-2">
@@ -97,12 +99,14 @@ include '../includes/main/navigation.php';
                 </div>
             </div>
             <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-warning" id="editScheduleBtn">
-                    <i class="fas fa-edit me-1"></i>Edit
-                </button>
-                <button type="button" class="btn btn-danger" id="deleteScheduleBtn">
-                    <i class="fas fa-trash me-1"></i>Delete
-                </button>
+                <?php if ($_SESSION['role'] !== 'legislator'): ?>
+                    <button type="button" class="btn btn-warning" id="editScheduleBtn">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deleteScheduleBtn">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                <?php endif; ?>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Close
                 </button>
@@ -124,10 +128,6 @@ include '../includes/main/navigation.php';
                 <div class="modal-body">
                     <input type="hidden" id="edit_schedule_id" name="schedule_id">
                     <div class="mb-3">
-                        <label for="edit_current_status" class="form-label">Current Status</label>
-                        <input type="text" class="form-control" id="edit_current_status" name="current_status">
-                    </div>
-                    <div class="mb-3">
                         <label for="edit_hearing_date" class="form-label">Hearing Date</label>
                         <input type="date" class="form-control" id="edit_hearing_date" name="hearing_date" required>
                     </div>
@@ -142,15 +142,29 @@ include '../includes/main/navigation.php';
                             <option value="Special">Special</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_reading_result" class="form-label">Reading Result</label>
-                        <select class="form-select" id="edit_reading_result" name="reading_result" required>
-                            <option value="">Select Result</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Deferred">Deferred</option>
-                            <option value="For Amendment">For Amendment</option>
-                        </select>
-                    </div>
+                    <?php if ($_SESSION['role'] !== 'committee'): ?>
+                        <div class="mb-3">
+                            <label for="reading_status" class="form-label">Reading Status</label>
+                            <select class="form-select" id="reading_status" name="reading_status">
+                                <option value="">Select Status</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Deferred">Deferred</option>
+                                <option value="Enacted">Enacted</option>
+                                <option value="For Amendment">For Amendment</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
+                        <div class="mb-3">
+                            <label for="hearing_status" class="form-label">Hearing Status</label>
+                            <select class="form-select" id="hearing_status" name="hearing_status">
+                                <option value="">Select Hearing Status</option>
+                                <option value="1st Hearing">1st Hearing</option>
+                                <option value="2nd Hearing">2nd Hearing</option>
+                                <option value="3rd Hearing">3rd Hearing</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
                     <div class="mb-3">
                         <label for="edit_remarks" class="form-label">Remarks (optional)</label>
                         <textarea class="form-control" id="edit_remarks" name="remarks" rows="2"></textarea>
@@ -191,10 +205,6 @@ include '../includes/main/navigation.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="current_status" class="form-label">Current Status</label>
-                        <input type="text" class="form-control" id="current_status" name="current_status">
-                    </div>
-                    <div class="mb-3">
                         <label for="hearing_date" class="form-label">Hearing Date</label>
                         <input type="date" class="form-control" id="hearing_date" name="hearing_date" required>
                     </div>
@@ -209,15 +219,29 @@ include '../includes/main/navigation.php';
                             <option value="Special">Special</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="reading_result" class="form-label">Reading Result</label>
-                        <select class="form-select" id="reading_result" name="reading_result">
-                            <option value="">Select Result</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Deferred">Deferred</option>
-                            <option value="For Amendment">For Amendment</option>
-                        </select>
-                    </div>
+                    <?php if ($_SESSION['role'] !== 'committee'): ?>
+                        <div class="mb-3">
+                            <label for="reading_status" class="form-label">Reading Status</label>
+                            <select class="form-select" id="reading_status" name="reading_status">
+                                <option value="">Select Status</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Deferred">Deferred</option>
+                                <option value="Enacted">Enacted</option>
+                                <option value="For Amendment">For Amendment</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
+                        <div class="mb-3">
+                            <label for="hearing_status" class="form-label">Hearing Status</label>
+                            <select class="form-select" id="hearing_status" name="hearing_status">
+                                <option value="">Select Hearing Status</option>
+                                <option value="1st Hearing">1st Hearing</option>
+                                <option value="2nd Hearing">2nd Hearing</option>
+                                <option value="3rd Hearing">3rd Hearing</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
                     <div class="mb-3">
                         <label for="remarks" class="form-label">Remarks (optional)</label>
                         <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
@@ -323,11 +347,12 @@ include '../includes/main/navigation.php';
                 // Use formatted time for modal
                 var timeStr = event.extendedProps.hearing_time_formatted || '';
                 document.getElementById('modalProposalTitle').textContent = event.title;
-                document.getElementById('modalCurrentStatus').textContent = event.extendedProps.current_status || '';
+                // Set Hearing Status
+                document.getElementById('modalHearingStatus').textContent = event.extendedProps.hearing_status || '';
                 document.getElementById('modalHearingDate').textContent = event.start ? event.start.toLocaleDateString() : '';
                 document.getElementById('modalHearingTime').textContent = timeStr;
                 document.getElementById('modalSessionType').textContent = event.extendedProps.session_type || '';
-                document.getElementById('modalReadingResult').textContent = event.extendedProps.reading_result || '';
+                document.getElementById('modalReadingStatus').textContent = event.extendedProps.reading_status || '';
                 document.getElementById('modalRemarks').textContent = event.extendedProps.remarks || '';
                 var modal = new bootstrap.Modal(document.getElementById('eventDetailsModal'));
                 modal.show();
@@ -353,7 +378,7 @@ include '../includes/main/navigation.php';
             document.getElementById('modalHearingDate').textContent = selectedEvent.start ? selectedEvent.start.toLocaleDateString() : '';
             document.getElementById('modalHearingTime').textContent = selectedEvent.extendedProps.hearing_time_formatted || '';
             document.getElementById('modalSessionType').textContent = selectedEvent.extendedProps.session_type || '';
-            document.getElementById('modalReadingResult').textContent = selectedEvent.extendedProps.reading_result || '';
+            document.getElementById('modalReadingStatus').textContent = selectedEvent.extendedProps.reading_status || '';
             document.getElementById('modalRemarks').textContent = selectedEvent.extendedProps.remarks || '';
 
             // Show/hide the view document button beside the proposal title
@@ -390,7 +415,8 @@ include '../includes/main/navigation.php';
                     $('#edit_hearing_time').val(t[0] + ':' + t[1]);
                 }
                 $('#edit_session_type').val(selectedEvent.extendedProps.session_type || 'Regular');
-                $('#edit_reading_result').val(selectedEvent.extendedProps.reading_result || '');
+                $('#reading_status').val(selectedEvent.extendedProps.reading_status || '');
+                $('#hearing_status').val(selectedEvent.extendedProps.hearing_status || '');
                 $('#edit_remarks').val(selectedEvent.extendedProps.remarks || '');
                 $('#editScheduleModal').modal('show');
                 // Remove this handler so it doesn't stack
@@ -419,6 +445,34 @@ include '../includes/main/navigation.php';
                     }
                 })
                 .catch(() => showToast('Error adding schedule.', 'error'));
+        });
+
+        // Handle Fill Schedule form submit
+        $('#fillScheduleForm').on('submit', function (e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            formData.append('add_schedule', true);
+
+            $.ajax({
+                url: '../../controller/store/schedule_controller.php',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    const result = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (result.status === 'success') {
+                        $('#ordinanceProposalsTable').DataTable().draw();
+                        $('#fillScheduleModal').modal('hide');
+                        showToast(result.message, 'success');
+                    } else {
+                        showToast(result.message || 'Failed to add schedule.', 'error');
+                    }
+                },
+                error: function () {
+                    showToast('Error adding schedule.', 'error');
+                }
+            });
         });
 
         // Delete button handler (show confirm modal)
