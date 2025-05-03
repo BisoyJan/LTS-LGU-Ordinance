@@ -134,15 +134,22 @@ while ($row = mysqli_fetch_assoc($query)) {
     }
     $file_html .= '</div>';
 
+    // Enable viewButton only if status is Approved
+    $isApproved = (strtolower($status) === 'approved');
+
     $actions = '
-        <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewStatusModal"><i class="fas fa-eye"></i></button>
-        <button class="updateStatusButton btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button"><i class="fas fa-pen"></i></button>' .
-        (!empty($row['file_path']) && !empty($row['action_type']) ?
-            ' <a href="' . $googleDocsUrl . '" target="_blank" class="btn btn-info btn-sm ms-1" title="View Document"><i class="fas fa-file-edit"></i></a>' :
-            (!empty($row['file_path']) ?
-                ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="Status update required before viewing"><i class="fas fa-file-edit"></i></a>' :
-                ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="No document available"><i class="fas fa-file-edit"></i></a>'
-            ));
+        <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewStatusModal"' . ($isApproved ? '' : ' disabled') . '><i class="fas fa-eye"></i></button>
+        <button class="updateStatusButton btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button"' . ($isApproved ? ' disabled' : '') . '><i class="fas fa-pen"></i></button>';
+
+    if (!empty($row['file_path'])) {
+        if (!empty($row['action_type']) && !$isApproved) {
+            $actions .= ' <a href="' . $googleDocsUrl . '" target="_blank" class="btn btn-info btn-sm ms-1" title="View Document"><i class="fas fa-file-edit"></i></a>';
+        } else {
+            $actions .= ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="' . ($isApproved ? 'Disabled for Approved status' : 'Status update required before viewing') . '"><i class="fas fa-file-edit"></i></a>';
+        }
+    } else {
+        $actions .= ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="No document available"><i class="fas fa-file-edit"></i></a>';
+    }
 
     $data[] = array(
         htmlspecialchars($row['id']),

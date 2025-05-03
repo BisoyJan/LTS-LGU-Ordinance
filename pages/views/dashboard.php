@@ -400,7 +400,8 @@ $dateTime = getHumanizedDateTime();
                         timeStr = h + ':' + m + ' ' + ampm;
                     }
                     let title = arg.event.title || '';
-                    return { html: `<span style="font-weight:600;">${timeStr}</span> <span>${title}</span>` };
+                    let session = arg.event.extendedProps.session_type || '';
+                    return { html: `<span style="font-weight:600;">${timeStr}</span> - <span>${title}</span> (${session})` };
                 },
                 eventClick: function (info) {
                     // Fill modal with event details

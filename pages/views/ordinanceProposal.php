@@ -287,14 +287,27 @@ include '../includes/main/navigation.php';
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="schedule_proposal_id" name="proposal_id">
-                    <div class="mb-3">
-                        <label for="schedule_hearing_date" class="form-label">Hearing Date</label>
-                        <input type="date" class="form-control" id="schedule_hearing_date" name="hearing_date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="schedule_hearing_time" class="form-label">Hearing Time</label>
-                        <input type="time" class="form-control" id="schedule_hearing_time" name="hearing_time" required>
-                    </div>
+
+                    <?php if ($_SESSION['role'] === 'committee') { ?>
+                        <div class="mb-3">
+                            <label for="schedule_hearing_date" class="form-label">Hearing Date</label>
+                            <input type="date" class="form-control" id="schedule_hearing_date" name="hearing_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="schedule_hearing_time" class="form-label">Hearing Time</label>
+                            <input type="time" class="form-control" id="schedule_hearing_time" name="hearing_time" required>
+                        </div>
+                    <?php } else { ?>
+                        <div class="mb-3">
+                            <label for="schedule_reading_date" class="form-label">Reading Date</label>
+                            <input type="date" class="form-control" id="schedule_reading_date" name="reading_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="schedule_reading_time" class="form-label">Reading Time</label>
+                            <input type="time" class="form-control" id="schedule_reading_time" name="reading_time" required>
+                        </div>
+                    <?php } ?>
+
                     <div class="mb-3">
                         <label for="schedule_session_type" class="form-label">Session Type</label>
                         <select class="form-select" id="schedule_session_type" name="session_type" required>
@@ -302,24 +315,30 @@ include '../includes/main/navigation.php';
                             <option value="Special">Special</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="schedule_reading_result" class="form-label">Reading Result</label>
-                        <select class="form-select" id="schedule_reading_result" name="reading_result" required>
-                            <option value="">Select Result</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Deferred">Deferred</option>
-                            <option value="For Amendment">For Amendment</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="schedule_hearing_status" class="form-label">Hearing Status</label>
-                        <select class="form-select" id="schedule_hearing_status" name="hearing_status" required>
-                            <option value="">Select Hearing Status</option>
-                            <option value="1st Hearing">1st Hearing</option>
-                            <option value="2nd Hearing">2nd Hearing</option>
-                            <option value="3rd Hearing">3rd Hearing</option>
-                        </select>
-                    </div>
+
+                    <?php if ($_SESSION['role'] === 'committee') { ?>
+                        <div class="mb-3">
+                            <label for="schedule_hearing_status" class="form-label">Hearing Status</label>
+                            <select class="form-select" id="schedule_hearing_status" name="hearing_status" required>
+                                <option value="">Select Hearing Status</option>
+                                <option value="1st Hearing">1st Hearing</option>
+                                <option value="2nd Hearing">2nd Hearing</option>
+                                <option value="3rd Hearing">3rd Hearing</option>
+                            </select>
+                        </div>
+                    <?php } else { ?>
+                        <div class="mb-3">
+                            <label for="reading_status" class="form-label">Reading Status</label>
+                            <select class="form-select" id="reading_status" name="reading_status">
+                                <option value="">Select Result</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Deferred">Deferred</option>
+                                <option value="Enacted">Enacted</option>
+                                <option value="For Amendment">For Amendment</option>
+                            </select>
+                        </div>
+                    <?php } ?>
+
                     <div class="mb-3">
                         <label for="schedule_remarks" class="form-label">Remarks (optional)</label>
                         <textarea class="form-control" id="schedule_remarks" name="remarks" rows="2"></textarea>
@@ -392,7 +411,7 @@ include '../includes/main/navigation.php';
                 { "data": 4, "title": "File" },
                 { "data": 5, "title": "Actions", "orderable": false }
             ],
-            "order": [[0, "desc"]],
+            "order": [[0, "asc"]],
             "lengthChange": true,
             "searching": true,
             "paging": true,

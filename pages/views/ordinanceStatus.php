@@ -108,7 +108,7 @@ include '../includes/main/navigation.php';
             <div class="modal-body">
                 <form id="updateStatusForm">
                     <input type="hidden" id="proposal_id" name="proposal_id">
-                    <?php if ($_SESSION['role'] !== 'committee') { ?>
+                    <?php if ($_SESSION['role'] !== 'legislator') { ?>
                         <div class="mb-3">
                             <label for="action_type" class="form-label">Status</label>
                             <select class="form-select" id="action_type" name="action_type" required>
@@ -125,7 +125,7 @@ include '../includes/main/navigation.php';
                     <?php } else { ?>
                         <div class="mb-3">
                             <label for="action_type" class="form-label">Status (This only be updated by the
-                                Legislator)</label>
+                                Committee)</label>
                             <input type="text" class="form-control" id="action_type" name="action_type" readonly>
                         <?php } ?>
                         <div class="mb-3">

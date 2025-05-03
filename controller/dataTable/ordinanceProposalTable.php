@@ -130,7 +130,7 @@ while ($row = mysqli_fetch_assoc($query)) {
         ';
     }
 
-    if ($userRole !== 'legislator') {
+    if ($userRole == 'committee' || $userRole == 'admin' || $userRole == 'secretary') {
         // Check if this proposal is already scheduled
         $proposal_id = intval($row['id']);
         $schedule_check = mysqli_query($conn, "SELECT id FROM schedule WHERE proposal_id = $proposal_id LIMIT 1");
