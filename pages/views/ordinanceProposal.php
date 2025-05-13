@@ -118,7 +118,7 @@ include '../includes/main/navigation.php';
                             </div>
                         </div>
                         <?php
-                        // Hide the committee select if the user is a legislator
+                        // Always show the committee select for all roles
                         if (!isset($_SESSION))
                             session_start();
                         $userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
@@ -132,32 +132,26 @@ include '../includes/main/navigation.php';
                                 $userCommitteeId = $row['committee_id'];
                             }
                         }
-                        if ($userRole !== 'legislator'):
                         ?>
-                            <div class="mb-3">
-                                <label for="committee" class="form-label">Committee</label>
-                                <select class="form-select" id="committee" name="committee_id" required
-                                    <?php if ($userRole === 'committee' || $userRole === 'legislator') echo 'disabled'; ?>>
-                                    <option value="">Select Committee</option>
-                                    <?php
-                                    require_once '../../database/database.php';
-                                    $conn = getConnection();
-                                    $query = "SELECT id, name FROM committees ORDER BY name";
-                                    $result = mysqli_query($conn, $query);
-                                    while ($row = mysqli_fetch_assoc($result)) {
-                                        $selected = ($userCommitteeId && $row['id'] == $userCommitteeId) ? 'selected' : '';
-                                        echo "<option value='" . htmlspecialchars($row['id']) . "' $selected>" . htmlspecialchars($row['name']) . "</option>";
-                                    }
-                                    ?>
-                                </select>
-                                <div class="invalid-feedback">
-                                    Please select a committee.
-                                </div>
-                                <?php if ($userRole === 'committee' || $userRole === 'legislator'): ?>
-                                    <input type="hidden" name="committee_id" value="<?php echo htmlspecialchars($userCommitteeId); ?>">
-                                <?php endif; ?>
+                        <div class="mb-3">
+                            <label for="committee" class="form-label">Committee</label>
+                            <select class="form-select" id="committee" name="committee_id" required>
+                                <option value="">Select Committee</option>
+                                <?php
+                                require_once '../../database/database.php';
+                                $conn = getConnection();
+                                $query = "SELECT id, name FROM committees ORDER BY name";
+                                $result = mysqli_query($conn, $query);
+                                while ($row = mysqli_fetch_assoc($result)) {
+                                    $selected = ($userCommitteeId && $row['id'] == $userCommitteeId) ? 'selected' : '';
+                                    echo "<option value='" . htmlspecialchars($row['id']) . "' $selected>" . htmlspecialchars($row['name']) . "</option>";
+                                }
+                                ?>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a committee.
                             </div>
-                        <?php endif; ?>
+                        </div>
                         <div class="mb-3">
                             <label for="file" class="form-label">File</label>
                             <input class="form-control" type="file" id="file" name="file" <?php echo $disabled; ?>>
