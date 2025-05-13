@@ -27,25 +27,26 @@ include '../includes/main/navigation.php';
     <div class="row mb-3 align-items-end">
         <?php
         // Start session if not already started
-        if (!isset($_SESSION)) session_start();
+        if (!isset($_SESSION))
+            session_start();
         $userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
         ?>
         <?php if ($userRole === 'admin' || $userRole === 'secretary'): ?>
-        <div class="col-md-3">
-            <label for="filterCommittee" class="form-label">Filter by Committee</label>
-            <select class="form-select" id="filterCommittee">
-                <option value="">All Committees</option>
-                <?php
-                require_once '../../database/database.php';
-                $conn = getConnection();
-                $query = "SELECT id, name FROM committees ORDER BY name";
-                $result = mysqli_query($conn, $query);
-                while ($row = mysqli_fetch_assoc($result)) {
-                    echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
-                }
-                ?>
-            </select>
-        </div>
+            <div class="col-md-3">
+                <label for="filterCommittee" class="form-label">Filter by Committee</label>
+                <select class="form-select" id="filterCommittee">
+                    <option value="">All Committees</option>
+                    <?php
+                    require_once '../../database/database.php';
+                    $conn = getConnection();
+                    $query = "SELECT id, name FROM committees ORDER BY name";
+                    $result = mysqli_query($conn, $query);
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
+                    }
+                    ?>
+                </select>
+            </div>
         <?php endif; ?>
         <div class="col-md-2">
             <label for="filterFromDate" class="form-label">From Date</label>
@@ -374,7 +375,7 @@ include '../includes/main/navigation.php';
                 "type": "POST",
                 "data": function (d) {
                     <?php if ($userRole === 'admin' || $userRole === 'secretary'): ?>
-                    d.committee = $('#filterCommittee').val();
+                        d.committee = $('#filterCommittee').val();
                     <?php endif; ?>
                     d.fromDate = $('#filterFromDate').val();
                     d.toDate = $('#filterToDate').val();
