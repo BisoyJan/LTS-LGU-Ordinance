@@ -15,11 +15,23 @@ $columns = array("id", "proposal", "proposal_date", "details", "file_name");
 
 $search_value = isset($_POST['search']['value']) ? trim($_POST['search']['value']) : "";
 
+// Get user's committee_id if not admin/secretary
+$userCommitteeId = null;
+if ($userRole === 'legislator' || $userRole === 'committee') {
+    $userCommitteeId = null;
+    if ($userId) {
+        $userCommitteeQuery = mysqli_query($conn, "SELECT committee_id FROM users WHERE id = $userId LIMIT 1");
+        if ($userCommitteeQuery && $row = mysqli_fetch_assoc($userCommitteeQuery)) {
+            $userCommitteeId = $row['committee_id'];
+        }
+    }
+}
+
 // Main query with joins
 $sql = "SELECT op.id, op.proposal, op.proposal_date, op.details, op.file_name, op.file_path, 
         op.file_type, op.file_size, op.created_at, 
         c.id as committee_id, c.name as committee_name,
-        u.username as created_by, op.user_id
+        u.name as author, op.user_id
         FROM ordinance_proposals op
         LEFT JOIN committees c ON op.committee_id = c.id
         LEFT JOIN users u ON op.user_id = u.id";
@@ -35,8 +47,13 @@ if (!empty($search_value)) {
                      OR op.file_name LIKE '%$search_value%')";
 }
 
-// Use op.committee_id instead of c.id for committee filtering
-if (isset($_POST['committee']) && !empty($_POST['committee'])) {
+// Committee filter from session (for legislator/committee)
+if (($userRole === 'legislator' || $userRole === 'committee') && $userCommitteeId) {
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.committee_id = $userCommitteeId";
+}
+
+// Committee filter from UI (for admin/secretary)
+if (($userRole === 'admin' || $userRole === 'secretary') && isset($_POST['committee']) && !empty($_POST['committee'])) {
     $committee_id = intval($_POST['committee']);
     $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.committee_id = $committee_id";
 }
@@ -152,7 +169,7 @@ while ($row = mysqli_fetch_assoc($query)) {
 
     $data[] = array(
         $row['id'],
-        $row['proposal'] . '<br><small class="text-muted">By: ' . htmlspecialchars($row['created_by']) .
+        $row['proposal'] . '<br><small class="text-muted">Author: ' . htmlspecialchars($row['author']) .
         '<br>Committee: ' . $committee_display . '</small>',
         $formatted_date,
         $row['details'],

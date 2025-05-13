@@ -5,6 +5,15 @@ require_once('../../scripts/role_authenticator.php');
 restrictAccess('legislator');
 
 include '../includes/main/navigation.php';
+
+// Fetch committees for dropdown
+require_once('../../database/database.php');
+$conn = getConnection();
+$committees = [];
+$result = $conn->query("SELECT id, name FROM committees ORDER BY name ASC");
+while ($row = $result->fetch_assoc()) {
+    $committees[] = $row;
+}
 ?>
 
 <div class="container-fluid">
@@ -32,6 +41,7 @@ include '../includes/main/navigation.php';
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Committee</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -59,6 +69,13 @@ include '../includes/main/navigation.php';
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="invalid-feedback">
+                            Please provide a name.
+                        </div>
+                    </div>
+                    <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
                         <input type="email" class="form-control" id="email" name="email" required>
                         <div class="invalid-feedback">
@@ -74,7 +91,7 @@ include '../includes/main/navigation.php';
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
-                        <select class="form-select" id="role" name="role" required>
+                        <select class="form-select" id="role" name="role" required onchange="toggleCommitteeDropdown()">
                             <option value="">Select Role</option>
                             <option value="legislator">Legislator</option>
                             <option value="admin">Administrator</option>
@@ -84,6 +101,20 @@ include '../includes/main/navigation.php';
                         </select>
                         <div class="invalid-feedback">
                             Please select a role.
+                        </div>
+                    </div>
+                    <div class="mb-3" id="committeeDropdownDiv" style="display:none;">
+                        <label for="committee_id" class="form-label">Committee</label>
+                        <select class="form-select" id="committee_id" name="committee_id">
+                            <option value="">Select Committee</option>
+                            <?php foreach ($committees as $committee): ?>
+                                <option value="<?= htmlspecialchars($committee['id']) ?>">
+                                    <?= htmlspecialchars($committee['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a committee.
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -135,8 +166,10 @@ include '../includes/main/navigation.php';
             "columns": [
                 { "title": "ID" },
                 { "title": "Username" },
+                { "title": "Name" },
                 { "title": "Email" },
                 { "title": "Role" },
+                { "title": "Committee" },
                 { "title": "Actions", "orderable": false }
             ],
             "serverSide": true,
@@ -152,11 +185,27 @@ include '../includes/main/navigation.php';
         });
     });
 
+    function toggleCommitteeDropdown() {
+        var role = $('#role').val();
+        if (role === 'legislator' || role === 'committee') {
+            $('#committeeDropdownDiv').show();
+            $('#committee_id').attr('required', true);
+        } else {
+            $('#committeeDropdownDiv').hide();
+            $('#committee_id').val('');
+            $('#committee_id').attr('required', false);
+        }
+    }
+
+    // Ensure dropdown is correct when editing
     function formIDChangeAdd() {
         $("form").attr('id', 'userForm')
         $('#userForm')[0].reset();
         var label = document.getElementById('userModalLabel');
         label.innerHTML = "Add User";
+        $('#committeeDropdownDiv').hide();
+        $('#committee_id').val('');
+        $('#committee_id').attr('required', false);
     };
 
     function formIDChangeEdit() {
@@ -221,8 +270,11 @@ include '../includes/main/navigation.php';
 
                         $('#id').val(res.data.id);
                         $('#username').val(res.data.username);
+                        $('#name').val(res.data.name || '');
                         $('#email').val(res.data.email);
                         $('#role').val(res.data.role);
+                        toggleCommitteeDropdown();
+                        $('#committee_id').val(res.data.committee_id || '');
 
                         console.log("After setting - Username field value:", $('#username').val());
 

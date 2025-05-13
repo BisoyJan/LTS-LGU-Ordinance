@@ -1,8 +1,9 @@
 <?php
 require '../../database/database.php';
+session_start();
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+$userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+$userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
 $conn = getConnection();
 
@@ -26,6 +27,7 @@ $sql = "SELECT
     op.details, 
     op.file_path,
     COALESCE(u1.username, 'System') as created_by,
+    COALESCE(u1.name, 'System') as author,
     COALESCE(c.name, 'Unassigned') as committee_name,
     os.action_type,
     os.remarks, 
@@ -54,6 +56,18 @@ if (!$totalQuery) {
 
 $total_all_rows = mysqli_num_rows($totalQuery);
 
+// Get user's committee_id if not admin/secretary
+$userCommitteeId = null;
+if ($userRole === 'legislator' || $userRole === 'committee') {
+    $userCommitteeId = null;
+    if ($userId) {
+        $userCommitteeQuery = mysqli_query($conn, "SELECT committee_id FROM users WHERE id = $userId LIMIT 1");
+        if ($userCommitteeQuery && $row = mysqli_fetch_assoc($userCommitteeQuery)) {
+            $userCommitteeId = $row['committee_id'];
+        }
+    }
+}
+
 // Filtering
 $whereClause = "";
 if (!empty($search_value)) {
@@ -64,7 +78,13 @@ if (!empty($search_value)) {
                      OR c.name LIKE '%$search_value%')";
 }
 
-if (isset($_GET['committee']) && !empty($_GET['committee'])) {
+// Committee filter from session (for legislator/committee)
+if (($userRole === 'legislator' || $userRole === 'committee') && $userCommitteeId) {
+    $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.committee_id = $userCommitteeId";
+}
+
+// Committee filter from UI (for admin/secretary)
+if (($userRole === 'admin' || $userRole === 'secretary') && isset($_GET['committee']) && !empty($_GET['committee'])) {
     $committee_id = intval($_GET['committee']);
     $whereClause .= (empty($whereClause) ? " WHERE" : " AND") . " op.committee_id = $committee_id";
 }
@@ -154,7 +174,7 @@ while ($row = mysqli_fetch_assoc($query)) {
     $data[] = array(
         htmlspecialchars($row['id']),
         htmlspecialchars($row['proposal']) .
-        '<br><small class="text-muted">Created by: ' . htmlspecialchars($row['created_by']) .
+        '<br><small class="text-muted">Author: ' . htmlspecialchars($row['author']) .
         '<br>Committee: ' . htmlspecialchars($row['committee_name']) . '</small>',
         $formatted_date,
         $status_badge,

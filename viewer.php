@@ -79,8 +79,8 @@ $conn = getConnection();
                 <div class="modal-body">
                     <h5 id="modalProposalTitle" class="text-primary"></h5>
                     <p><strong>Committee:</strong> <span id="modalCommittee"></span></p>
-                    <p><strong>Proposed by:</strong> <span id="modalCreatedBy"></span></p>
-                    <p><strong>Date:</strong> <span id="modalProposalDate"></span></p>
+                    <p><strong>Author:</strong> <span id="modalCreatedBy"></span></p>
+                    <p><strong>Proposed Date:</strong> <span id="modalProposalDate"></span></p>
                     <p><strong>Details:</strong></p>
                     <div id="modalDetails" class="border p-3 rounded bg-light text-wrap" style="white-space: pre-wrap;">
                     </div>

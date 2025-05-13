@@ -7,11 +7,13 @@ error_reporting(E_ALL);
 $conn = getConnection();
 
 $output = array();
-$columns = array("id", "username", "email", "role");
+$columns = array("id", "username", "name", "email", "role", "committee_name");
 $search_value = isset($_POST['search']['value']) ? trim($_POST['search']['value']) : "";
 
 // Base Query
-$sql = "SELECT id, username, email, role, created_at FROM users";
+$sql = "SELECT users.id, users.username, users.name, users.email, users.role, users.created_at, committees.name AS committee_name
+        FROM users
+        LEFT JOIN committees ON users.committee_id = committees.id";
 $totalQuery = mysqli_query($conn, $sql);
 $total_all_rows = mysqli_num_rows($totalQuery);
 
@@ -19,22 +21,26 @@ $total_all_rows = mysqli_num_rows($totalQuery);
 $whereClause = "";
 if (!empty($search_value)) {
     $search_value = mysqli_real_escape_string($conn, $search_value);
-    $whereClause = " WHERE username LIKE '%$search_value%' OR email LIKE '%$search_value%' OR role LIKE '%$search_value%'";
+    $whereClause = " WHERE users.username LIKE '%$search_value%' OR users.email LIKE '%$search_value%' OR users.role LIKE '%$search_value%' OR committees.name LIKE '%$search_value%'";
 }
 
 // Sorting
-$orderClause = " ORDER BY id DESC"; // Default order
+$orderClause = " ORDER BY users.id DESC"; // Default order
 if (isset($_POST['order']) && isset($_POST['order'][0]['column']) && isset($_POST['order'][0]['dir'])) {
     $column_index = intval($_POST['order'][0]['column']);
     $order_direction = ($_POST['order'][0]['dir'] === 'asc') ? 'DESC' : 'ASC';
     if (isset($columns[$column_index])) {
-        $orderClause = " ORDER BY " . $columns[$column_index] . " " . $order_direction;
+        if ($columns[$column_index] == "committee_name") {
+            $orderClause = " ORDER BY committees.name " . $order_direction;
+        } else {
+            $orderClause = " ORDER BY users." . $columns[$column_index] . " " . $order_direction;
+        }
     }
 }
 
 // Get total filtered count
 if (!empty($whereClause)) {
-    $filtered_query = "SELECT COUNT(*) as total FROM users" . $whereClause;
+    $filtered_query = "SELECT COUNT(*) as total FROM users LEFT JOIN committees ON users.committee_id = committees.id" . $whereClause;
     $filtered_result = mysqli_query($conn, $filtered_query);
     $filtered_row = mysqli_fetch_assoc($filtered_result);
     $count_filtered_rows = $filtered_row['total'];
@@ -61,8 +67,10 @@ while ($row = mysqli_fetch_assoc($query)) {
     $data[] = [
         htmlspecialchars($row['id']),
         htmlspecialchars($row['username']),
+        htmlspecialchars($row['name']),
         htmlspecialchars($row["email"]),
         htmlspecialchars($row['role']),
+        htmlspecialchars($row['committee_name'] ?? ''), // New column for committee name
         '<button class="editButton btn btn-success ms-1" data-id="' . $row["id"] . '" onclick="formIDChangeEdit()" type="button" data-bs-toggle="modal" data-bs-target="#userModal">Update</button>
         <button class="deleteButton btn btn-danger" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#userDeleteModal">Delete</button>'
     ];

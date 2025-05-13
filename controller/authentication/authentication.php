@@ -59,6 +59,7 @@ class Authentication
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['role'] = $user['role'];
+        $_SESSION['name'] = isset($user['name']) ? $user['name'] : '';
     }
 
     private function updatePassword($userId, $hashedPassword)

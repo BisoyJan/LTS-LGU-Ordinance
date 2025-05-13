@@ -10,7 +10,7 @@ $conn = getConnection();
 if (isset($_POST['fetch_User'])) {
     $user_id = mysqli_real_escape_string($conn, $_POST['id']);
 
-    $sql = "SELECT id, username, email, role FROM users WHERE id = '$user_id'";
+    $sql = "SELECT id, username, name, email, role, committee_id FROM users WHERE id = '$user_id'";
 
     $query_run = mysqli_query($conn, $sql);
 
@@ -34,11 +34,20 @@ if (isset($_POST['fetch_User'])) {
 
 if (isset($_POST['create_User'])) {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = PasswordUtil::hashPassword($_POST['password']); // Hash before escaping
     $role = mysqli_real_escape_string($conn, $_POST['role']);
+    $committee_id = null;
+    if ($role === 'legislator' || $role === 'committee') {
+        $committee_id = isset($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
+    }
 
-    $sql = "INSERT INTO users (username, email, password, role) VALUES ('$username', '$email', '$password', '$role')";
+    if ($committee_id) {
+        $sql = "INSERT INTO users (username, name, email, password, role, committee_id) VALUES ('$username', '$name', '$email', '$password', '$role', $committee_id)";
+    } else {
+        $sql = "INSERT INTO users (username, name, email, password, role) VALUES ('$username', '$name', '$email', '$password', '$role')";
+    }
 
     try {
         $conn->query($sql);
@@ -69,10 +78,20 @@ if (isset($_POST['create_User'])) {
 if (isset($_POST['update_User'])) {
     $id = mysqli_real_escape_string($conn, $_POST['id']);
     $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $role = mysqli_real_escape_string($conn, $_POST['role']);
+    $committee_id = null;
+    if ($role === 'legislator' || $role === 'committee') {
+        $committee_id = isset($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
+    }
 
-    $sql = "UPDATE users SET username = '$username', email = '$email', role = '$role'";
+    $sql = "UPDATE users SET username = '$username', name = '$name', email = '$email', role = '$role'";
+    if ($committee_id) {
+        $sql .= ", committee_id = $committee_id";
+    } else {
+        $sql .= ", committee_id = NULL";
+    }
 
     // Add password update only if a new password is provided
     if (!empty($_POST['password'])) {

@@ -22,21 +22,28 @@ include '../includes/main/navigation.php';
         </div>
 
         <div class="row mb-3 align-items-end">
-            <div class="col-md-3">
-                <label for="filterCommittee" class="form-label">Filter by Committee</label>
-                <select class="form-select" id="filterCommittee">
-                    <option value="">All Committees</option>
-                    <?php
-                    require_once '../../database/database.php';
-                    $conn = getConnection();
-                    $query = "SELECT id, name FROM committees ORDER BY name";
-                    $result = mysqli_query($conn, $query);
-                    while ($row = mysqli_fetch_assoc($result)) {
-                        echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
-                    }
-                    ?>
-                </select>
-            </div>
+            <?php
+            if (!isset($_SESSION))
+                session_start();
+            $userRole = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+            ?>
+            <?php if ($userRole === 'admin' || $userRole === 'secretary'): ?>
+                <div class="col-md-3">
+                    <label for="filterCommittee" class="form-label">Filter by Committee</label>
+                    <select class="form-select" id="filterCommittee">
+                        <option value="">All Committees</option>
+                        <?php
+                        require_once '../../database/database.php';
+                        $conn = getConnection();
+                        $query = "SELECT id, name FROM committees ORDER BY name";
+                        $result = mysqli_query($conn, $query);
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            echo "<option value='" . htmlspecialchars($row['id']) . "'>" . htmlspecialchars($row['name']) . "</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+            <?php endif; ?>
             <div class="col-md-2">
                 <label for="filterStatus" class="form-label">Filter by Status</label>
                 <select class="form-select" id="filterStatus">
@@ -188,7 +195,12 @@ include '../includes/main/navigation.php';
         });
 
         $('#applyFilters').on('click', function () {
-            const committee = $('#filterCommittee').val();
+            let committee;
+            <?php if ($userRole === 'admin' || $userRole === 'secretary'): ?>
+                committee = $('#filterCommittee').val();
+            <?php else: ?>
+                committee = '';
+            <?php endif; ?>
             const status = $('#filterStatus').val();
             const fromDate = $('#filterFromDate').val();
             const toDate = $('#filterToDate').val();
@@ -236,7 +248,7 @@ include '../includes/main/navigation.php';
                                         </h6>
                                         <p class="mb-2">
                                             <small class="text-muted">
-                                                Created by: ${result.drive_history.creator || 'Unknown'}<br>
+                                                Author: ${result.drive_history.creator || 'Unknown'}<br>
                                                 Created on: ${new Date(result.drive_history.created_at).toLocaleString()}
                                             </small>
                                         </p>`;

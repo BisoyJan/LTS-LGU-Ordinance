@@ -16,9 +16,11 @@ CREATE TABLE `committees` (
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
+  `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` varchar(20) NOT NULL,
+  `committee_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -100,7 +102,8 @@ ALTER TABLE `ordinance_status`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `fk_users_committee` (`committee_id`);
 
 ALTER TABLE `committees`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
@@ -132,5 +135,15 @@ ALTER TABLE `schedule`
 
 ALTER TABLE `schedule`
   ADD COLUMN `hearing_status` ENUM('1st Hearing', '2nd Hearing', '3rd Hearing') DEFAULT NULL AFTER `remarks`;
+
+ALTER TABLE `users`
+  ADD COLUMN `committee_id` int(11) DEFAULT NULL AFTER `role`,
+  ADD KEY `fk_users_committee` (`committee_id`);
+
+ALTER TABLE `users`
+  ADD CONSTRAINT `fk_users_committee` FOREIGN KEY (`committee_id`) REFERENCES `committees` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE `users`
+  ADD COLUMN `name` varchar(100) NOT NULL AFTER `username`;
 
 COMMIT;
