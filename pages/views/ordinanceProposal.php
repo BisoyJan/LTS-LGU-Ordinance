@@ -308,16 +308,17 @@ include '../includes/main/navigation.php';
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="schedule_reading_result" class="form-label">Reading Result</label>
-                        <select class="form-select" id="schedule_reading_result" name="reading_result" required>
-                            <option value="">Select Result</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Deferred">Deferred</option>
-                            <option value="Enacted">Enacted</option>
-                            <option value="For Amendment">For Amendment</option>
-                        </select>
-                    </div>
+                    <?php if ($_SESSION['role'] !== 'committee'): ?>
+                        <div class="mb-3">
+                            <label for="schedule_reading_result" class="form-label">Reading Status</label>
+                            <select class="form-select" id="schedule_reading_result" name="reading_result" required>
+                                <option value="">Select Reading Status</option>
+                                <option value="1st Reading">1st Reading</option>
+                                <option value="2nd Reading">2nd Reading</option>
+                                <option value="3rd Reading">3rd Reading</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if ($_SESSION['role'] !== 'secretary'): ?>
                         <div class="mb-3">

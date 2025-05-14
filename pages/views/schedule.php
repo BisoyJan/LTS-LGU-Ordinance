@@ -212,15 +212,17 @@ include '../includes/main/navigation.php';
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="reading_result" class="form-label">Reading Status</label>
-                        <select class="form-select" id="reading_result" name="reading_result">
-                            <option value="">Select Result</option>
-                            <option value="1st Reading">1st Reading</option>
-                            <option value="2nd Reading">2nd Reading</option>
-                            <option value="3rd Reading">3rd Reading</option>
-                        </select>
-                    </div>
+                    <?php if ($_SESSION['role'] !== 'committee'): ?>
+                        <div class="mb-3">
+                            <label for="reading_result" class="form-label">Reading Status</label>
+                            <select class="form-select" id="reading_result" name="reading_result">
+                                <option value="">Select Reading Status</option>
+                                <option value="1st Reading">1st Reading</option>
+                                <option value="2nd Reading">2nd Reading</option>
+                                <option value="3rd Reading">3rd Reading</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if ($_SESSION['role'] !== 'secretary'): ?>
                         <div class="mb-3">
