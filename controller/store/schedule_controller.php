@@ -13,7 +13,7 @@ if (isset($_POST['add_schedule'])) {
     $remarks = isset($_POST['remarks']) ? trim($_POST['remarks']) : '';
     $hearing_status = isset($_POST['hearing_status']) ? $_POST['hearing_status'] : null;
 
-    if (!$proposal_id || !$hearing_date || !$hearing_time || !$session_type || !$reading_result) {
+    if (!$proposal_id || !$hearing_date || !$hearing_time || !$session_type) {
         echo json_encode([
             'status' => 'error',
             'message' => 'All fields are required.'
@@ -36,7 +36,7 @@ if (isset($_POST['add_schedule'])) {
     }
     $stmt->close();
 
-    $stmt = $conn->prepare("INSERT INTO schedule (proposal_id, hearing_date, hearing_time, session_type, reading_result, remarks, hearing_status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO schedule (proposal_id, hearing_date, hearing_time, session_type, reading_status, remarks, hearing_status) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("issssss", $proposal_id, $hearing_date, $hearing_time, $session_type, $reading_result, $remarks, $hearing_status);
 
     if ($stmt->execute()) {

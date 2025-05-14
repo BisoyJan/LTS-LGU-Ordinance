@@ -211,18 +211,18 @@ include '../includes/main/navigation.php';
                             <option value="Special">Special</option>
                         </select>
                     </div>
-                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
-                        <div class="mb-3">
-                            <label for="reading_result" class="form-label">Reading Status</label>
-                            <select class="form-select" id="reading_result" name="reading_result">
-                                <option value="">Select Result</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Deferred">Deferred</option>
-                                <option value="Enacted">Enacted</option>
-                                <option value="For Amendment">For Amendment</option>
-                            </select>
-                        </div>
 
+                    <div class="mb-3">
+                        <label for="reading_result" class="form-label">Reading Status</label>
+                        <select class="form-select" id="reading_result" name="reading_result">
+                            <option value="">Select Result</option>
+                            <option value="1st Reading">1st Reading</option>
+                            <option value="2nd Reading">2nd Reading</option>
+                            <option value="3rd Reading">3rd Reading</option>
+                        </select>
+                    </div>
+
+                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
                         <div class="mb-3">
                             <label for="schedule_hearing_status" class="form-label">Hearing Status</label>
                             <select class="form-select" id="schedule_hearing_status" name="hearing_status" required>
@@ -233,6 +233,7 @@ include '../includes/main/navigation.php';
                             </select>
                         </div>
                     <?php endif; ?>
+
                     <div class="mb-3">
                         <label for="remarks" class="form-label">Remarks (optional)</label>
                         <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
