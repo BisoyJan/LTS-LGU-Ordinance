@@ -80,17 +80,24 @@ include '../includes/main/navigation.php';
                         </div>
                     </div>
                     <div class="row mb-3">
+                        <div class="col-md-4 fw-bold text-secondary">Reading Status:</div>
+                        <div class="col-md-8">
+                            <span id="modalReadingStatus" class="badge bg-secondary px-3 py-2"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold text-secondary">Hearing Status:</div>
+                        <div class="col-md-8">
+                            <span id="modalHearingStatus" class="badge bg-secondary px-3 py-2"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
                         <div class="col-md-4 fw-bold text-secondary">Session Type:</div>
                         <div class="col-md-8">
                             <span id="modalSessionType" class="badge bg-secondary px-3 py-2"></span>
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4 fw-bold text-secondary">Reading Result:</div>
-                        <div class="col-md-8">
-                            <span id="modalReadingResult" class="badge bg-success px-3 py-2"></span>
-                        </div>
-                    </div>
+
                     <div class="row mb-2">
                         <div class="col-md-4 fw-bold text-secondary">Remarks:</div>
                         <div class="col-md-8">
@@ -129,10 +136,6 @@ include '../includes/main/navigation.php';
                 <div class="modal-body">
                     <input type="hidden" id="edit_schedule_id" name="schedule_id">
                     <div class="mb-3">
-                        <label for="edit_current_status" class="form-label">Current Status</label>
-                        <input type="text" class="form-control" id="edit_current_status" name="current_status">
-                    </div>
-                    <div class="mb-3">
                         <label for="edit_hearing_date" class="form-label">Hearing Date</label>
                         <input type="date" class="form-control" id="edit_hearing_date" name="hearing_date" required>
                     </div>
@@ -148,13 +151,17 @@ include '../includes/main/navigation.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="edit_reading_result" class="form-label">Reading Result</label>
-                        <select class="form-select" id="edit_reading_result" name="reading_result" required>
-                            <option value="">Select Result</option>
+                        <label for="edit_reading_status" class="form-label">Reading Status</label>
+                        <select class="form-select" id="edit_reading_status" name="reading_status" required>
+                            <option value="">Select Status</option>
                             <option value="Approved">Approved</option>
                             <option value="Deferred">Deferred</option>
                             <option value="Enacted">Enacted</option>
                             <option value="For Amendment">For Amendment</option>
+                            <option value="Passed 1st Reading">Passed 1st Reading</option>
+                            <option value="Passed 2nd Reading">Passed 2nd Reading</option>
+                            <option value="Passed 3rd Reading">Passed 3rd Reading</option>
+
                         </select>
                     </div>
                     <div class="mb-3">
@@ -275,6 +282,9 @@ include '../includes/main/navigation.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Get user role from PHP session
+        var userRole = "<?php echo isset($_SESSION['role']) ? $_SESSION['role'] : ''; ?>";
+
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -283,15 +293,24 @@ include '../includes/main/navigation.php';
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
-            events: {
-                url: '../../controller/dataTable/scheduleEventsTable.php',
-                method: 'GET',
-                failure: function () {
-                    alert('There was an error while fetching events!');
-                },
-                success: function (data) {
-                    console.log('FullCalendar events ajax success:', data);
-                }
+            // Use a custom event source function to filter events by role
+            events: function (fetchInfo, successCallback, failureCallback) {
+                fetch('../../controller/dataTable/scheduleEventsTable.php')
+                    .then(response => response.json())
+                    .then(function (events) {
+                        let filtered = events;
+                        // committee: only show reading schedules
+                        if (userRole === 'committee') {
+                            filtered = events.filter(e => e.type === 'reading');
+                        }
+                        // secretary: only show hearing schedules
+                        else if (userRole === 'secretary') {
+                            filtered = events.filter(e => e.type === 'hearing');
+                        }
+                        // admin and others: show all
+                        successCallback(filtered);
+                    })
+                    .catch(failureCallback);
             },
             eventDidMount: function (info) {
                 // Set the background color for each event
@@ -338,17 +357,87 @@ include '../includes/main/navigation.php';
             eventClick: function (info) {
                 var event = info.event;
                 document.getElementById('modalScheduleId').value = event.id;
-                // Use formatted time for modal
-                var timeStr = event.extendedProps.hearing_time_formatted || '';
                 document.getElementById('modalProposalTitle').textContent = event.title;
-                document.getElementById('modalCurrentStatus').textContent = event.extendedProps.current_status || '';
-                document.getElementById('modalHearingDate').textContent = event.start ? event.start.toLocaleDateString() : '';
-                document.getElementById('modalHearingTime').textContent = timeStr;
-                document.getElementById('modalSessionType').textContent = event.extendedProps.session_type || '';
-                document.getElementById('modalReadingResult').textContent = event.extendedProps.reading_result || '';
-                document.getElementById('modalRemarks').textContent = event.extendedProps.remarks || '';
-                var modal = new bootstrap.Modal(document.getElementById('eventDetailsModal'));
-                modal.show();
+
+                // Loop through all .row.mb-3 in the modal and set values based on their label
+                var rows = document.querySelectorAll('#eventDetailsModal .modal-body .row.mb-3');
+                var readingStatusRow = null, hearingStatusRow = null;
+
+                rows.forEach(function (row) {
+                    var labelDiv = row.querySelector('.col-md-4');
+                    var valueDiv = row.querySelector('.col-md-8');
+                    if (!labelDiv || !valueDiv) return;
+                    var label = labelDiv.textContent.trim().toLowerCase();
+
+                    if (label.includes('current status')) {
+                        var el = valueDiv.querySelector('#modalCurrentStatus');
+                        if (el) el.textContent = event.extendedProps.current_status || '';
+                    } else if (label.includes('scheduled date')) {
+                        var el = valueDiv.querySelector('#modalHearingDate');
+                        if (el) el.textContent = event.start ? event.start.toLocaleDateString() : '';
+                    } else if (label.includes('scheduled time')) {
+                        var el = valueDiv.querySelector('#modalHearingTime');
+                        if (el) {
+                            if (event.extendedProps.type === 'reading') {
+                                el.textContent = event.extendedProps.reading_time_formatted || '';
+                            } else {
+                                el.textContent = event.extendedProps.hearing_time_formatted || '';
+                            }
+                        }
+                    } else if (label.includes('reading status')) {
+                        readingStatusRow = row;
+                        var el = valueDiv.querySelector('#modalReadingStatus');
+                        if (el) el.textContent = event.extendedProps.reading_status || '';
+                    } else if (label.includes('hearing status')) {
+                        hearingStatusRow = row;
+                        var el = valueDiv.querySelector('#modalHearingStatus');
+                        if (el) el.textContent = event.extendedProps.hearing_status || '';
+                    } else if (label.includes('session type')) {
+                        var el = valueDiv.querySelector('#modalSessionType');
+                        if (el) el.textContent = event.extendedProps.session_type || '';
+                    }
+                });
+
+                // Show only the relevant status row
+                if (readingStatusRow) {
+                    if (event.extendedProps.reading_status) {
+                        readingStatusRow.style.display = '';
+                    } else {
+                        readingStatusRow.style.display = 'none';
+                    }
+                }
+                if (hearingStatusRow) {
+                    if (event.extendedProps.hearing_status) {
+                        hearingStatusRow.style.display = '';
+                    } else {
+                        hearingStatusRow.style.display = 'none';
+                    }
+                }
+
+                // Remarks
+                var modalRemarks = document.getElementById('modalRemarks');
+                if (modalRemarks) modalRemarks.textContent = event.extendedProps.remarks || '';
+
+                // Show/hide the view document button beside the proposal title
+                var viewBtn = document.getElementById('viewProposalDocBtn');
+                var fileId = (event.extendedProps && event.extendedProps.file_id) ? event.extendedProps.file_id : (event.file_id || null);
+
+                if (viewBtn) {
+                    if (fileId && fileId !== 'null' && fileId !== '') {
+                        viewBtn.href = 'https://docs.google.com/document/d/' + fileId + '/preview';
+                        viewBtn.setAttribute('target', '_blank');
+                        viewBtn.removeAttribute('tabindex');
+                        viewBtn.classList.remove('disabled');
+                        viewBtn.style.display = 'inline-block';
+                    } else {
+                        viewBtn.href = '#';
+                        viewBtn.setAttribute('tabindex', '-1');
+                        viewBtn.classList.add('disabled');
+                        viewBtn.style.display = 'none';
+                    }
+                }
+
+                $('#eventDetailsModal').modal('show');
             }
         });
 
@@ -371,7 +460,6 @@ include '../includes/main/navigation.php';
             document.getElementById('modalHearingDate').textContent = selectedEvent.start ? selectedEvent.start.toLocaleDateString() : '';
             document.getElementById('modalHearingTime').textContent = selectedEvent.extendedProps.hearing_time_formatted || '';
             document.getElementById('modalSessionType').textContent = selectedEvent.extendedProps.session_type || '';
-            document.getElementById('modalReadingResult').textContent = selectedEvent.extendedProps.reading_result || '';
             document.getElementById('modalRemarks').textContent = selectedEvent.extendedProps.remarks || '';
 
             // Show/hide the view document button beside the proposal title
@@ -508,7 +596,7 @@ include '../includes/main/navigation.php';
                 body: formData
             })
                 .then(res => res.json())
-                .then(data => {
+                .then(function (data) { // <-- fix: wrap argument in function()
                     if (data.status === 'success') {
                         showToast(data.message, 'success');
                         var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editScheduleModal'));

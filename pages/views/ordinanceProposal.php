@@ -292,14 +292,29 @@ include '../includes/main/navigation.php';
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="schedule_proposal_id" name="proposal_id">
-                    <div class="mb-3">
-                        <label for="schedule_hearing_date" class="form-label">Hearing Date</label>
-                        <input type="date" class="form-control" id="schedule_hearing_date" name="hearing_date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="schedule_hearing_time" class="form-label">Hearing Time</label>
-                        <input type="time" class="form-control" id="schedule_hearing_time" name="hearing_time" required>
-                    </div>
+
+                    <?php if ($_SESSION['role'] === 'committee'): ?>
+                        <div class="mb-3">
+                            <label for="schedule_hearing_date" class="form-label">Hearing Date</label>
+                            <input type="date" class="form-control" id="schedule_hearing_date" name="hearing_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="schedule_hearing_time" class="form-label">Hearing Time</label>
+                            <input type="time" class="form-control" id="schedule_hearing_time" name="hearing_time" required>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($_SESSION['role'] === 'secretary'): ?>
+                        <div class="mb-3">
+                            <label for="schedule_reading_date" class="form-label">Reading Date</label>
+                            <input type="date" class="form-control" id="schedule_reading_date" name="reading_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="schedule_reading_time" class="form-label">Reading Time</label>
+                            <input type="time" class="form-control" id="schedule_reading_time" name="reading_time" required>
+                        </div>
+                    <?php endif; ?>
+
                     <div class="mb-3">
                         <label for="schedule_session_type" class="form-label">Session Type</label>
                         <select class="form-select" id="schedule_session_type" name="session_type" required>
@@ -308,7 +323,7 @@ include '../includes/main/navigation.php';
                         </select>
                     </div>
 
-                    <?php if ($_SESSION['role'] !== 'committee'): ?>
+                    <?php if ($_SESSION['role'] === 'secretary'): ?>
                         <div class="mb-3">
                             <label for="schedule_reading_result" class="form-label">Reading Status</label>
                             <select class="form-select" id="schedule_reading_result" name="reading_result" required>
@@ -320,7 +335,7 @@ include '../includes/main/navigation.php';
                         </div>
                     <?php endif; ?>
 
-                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
+                    <?php if ($_SESSION['role'] === 'committee'): ?>
                         <div class="mb-3">
                             <label for="schedule_hearing_status" class="form-label">Hearing Status</label>
                             <select class="form-select" id="schedule_hearing_status" name="hearing_status" required>

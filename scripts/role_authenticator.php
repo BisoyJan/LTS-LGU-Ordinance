@@ -25,10 +25,11 @@ function restrictAccess($rolePermission)
 
     // Define role-based access logic
     $roleAccess = [
+        'mayor' => ['dashboard.php', 'ordinanceProposal.php', 'ordinanceStatus.php'],
         'legislator' => ['dashboard.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php', 'user.php'],
         'committee' => ['dashboard.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php', 'reports.php', 'committee.php'],
         'secretary' => ['dashboard.php', 'ordinanceProposal.php', 'schedule.php', 'ordinanceStatus.php'],
-        'admin' => ['dashboard.php', 'user.php', 'committee.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php', 'reports.php', 'setting.php'],
+        'admin' => ['dashboard.php', 'user.php', 'committee.php', 'ordinanceProposal.php', 'ordinanceStatus.php', 'schedule.php', 'reports.php', 'setting.php']
     ];
 
     // Get the current page name

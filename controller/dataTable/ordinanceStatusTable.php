@@ -158,11 +158,21 @@ while ($row = mysqli_fetch_assoc($query)) {
     $isApproved = (strtolower($status) === 'approved');
 
     $actions = '
-        <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewStatusModal"' . ($isApproved ? '' : ' disabled') . '><i class="fas fa-eye"></i></button>
+        <button class="viewButton btn btn-primary btn-sm" data-id="' . $row["id"] . '" type="button" data-bs-toggle="modal" data-bs-target="#viewStatusModal"' . ($isApproved ? '' : 'enabled') . '><i class="fas fa-eye"></i></button>
         <button class="updateStatusButton btn btn-warning btn-sm ms-1" data-id="' . $row["id"] . '" type="button"' . ($isApproved ? ' disabled' : '') . '><i class="fas fa-pen"></i></button>';
 
+    // File edit button logic with mayor role check
     if (!empty($row['file_path'])) {
-        if (!empty($row['action_type']) && !$isApproved) {
+        if ($userRole === 'mayor') {
+            // Only allow download/upload if status is "Pending Approval"
+            if (strtolower($status) === 'pending approval') {
+                $downloadUrl = "https://docs.google.com/uc?export=download&id=" . $row['file_path'];
+                $actions .= ' <a href="' . $downloadUrl . '" target="_blank" class="btn btn-success btn-sm ms-1" title="Download Document"><i class="fas fa-download"></i></a>';
+                $actions .= ' <button class="btn btn-warning btn-sm ms-1 uploadMayorFileBtn" data-id="' . $row["id"] . '" title="Upload Updated Proposal"><i class="fas fa-upload"></i></button>';
+            }
+            // Always disable file edit for mayor
+            $actions .= ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="Mayors cannot edit documents"><i class="fas fa-file-edit"></i></a>';
+        } else if (!empty($row['action_type']) && !$isApproved) {
             $actions .= ' <a href="' . $googleDocsUrl . '" target="_blank" class="btn btn-info btn-sm ms-1" title="View Document"><i class="fas fa-file-edit"></i></a>';
         } else {
             $actions .= ' <a href="javascript:void(0)" class="btn btn-info btn-sm ms-1 disabled" title="' . ($isApproved ? 'Disabled for Approved status' : 'Status update required before viewing') . '"><i class="fas fa-file-edit"></i></a>';

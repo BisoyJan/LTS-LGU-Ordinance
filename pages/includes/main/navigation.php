@@ -12,6 +12,8 @@ function hasAccess($requiredRole)
             return in_array($requiredRole, ['secretary', 'committee']);
         case 'admin':
             return in_array($requiredRole, ['admin', 'committee', 'secretary']);
+        case 'mayor':
+            return in_array($requiredRole, ['mayor']);
         default:
             return false;
     }
@@ -83,6 +85,23 @@ function hasAccess($requiredRole)
             </li>
         <?php endif; ?>
 
+        <?php if (hasAccess('mayor')): ?>
+            <li class="nav-item">
+                <a href="../views/ordinanceProposal.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceProposal.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-file-alt me-2"></i>
+                    <span>Ordinance Proposal</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="../views/ordinanceStatus.php" class="nav-link
+            <?php echo basename($_SERVER['PHP_SELF']) == 'ordinanceStatus.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    <span>Ordinance Status</span>
+                </a>
+            </li>
+        <?php endif; ?>
+
         <?php if (hasAccess('secretary') || hasAccess('committee')): ?>
             <li class="nav-item">
                 <a href="../views/ordinanceProposal.php" class="nav-link
@@ -91,7 +110,6 @@ function hasAccess($requiredRole)
                     <?php if (($_SESSION['role'] !== 'secretary') && ($_SESSION['role'] !== 'committee')): ?>
                         <span>Ordinance Proposal</span>
                     <?php else: ?>
-
                         <span>Proposed Ordinance</span>
                     <?php endif; ?>
                 </a>

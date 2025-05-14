@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../../database/database.php';
 header('Content-Type: application/json');
 
@@ -6,24 +7,44 @@ $conn = getConnection();
 
 if (isset($_POST['add_schedule'])) {
     $proposal_id = isset($_POST['proposal_id']) ? intval($_POST['proposal_id']) : 0;
-    $hearing_date = isset($_POST['hearing_date']) ? $_POST['hearing_date'] : '';
-    $hearing_time = isset($_POST['hearing_time']) ? $_POST['hearing_time'] : '';
+
+    if ($_SESSION['role'] === 'committee') {
+        $hearing_date = isset($_POST['hearing_date']) ? $_POST['hearing_date'] : '';
+        $hearing_time = isset($_POST['hearing_time']) ? $_POST['hearing_time'] : '';
+    } else {
+        $reading_date = isset($_POST['reading_date']) ? $_POST['reading_date'] : '';
+        $reading_time = isset($_POST['reading_time']) ? $_POST['reading_time'] : '';
+    }
+
     $session_type = isset($_POST['session_type']) ? $_POST['session_type'] : 'Regular';
     $reading_result = isset($_POST['reading_result']) ? $_POST['reading_result'] : null;
     $remarks = isset($_POST['remarks']) ? trim($_POST['remarks']) : '';
     $hearing_status = isset($_POST['hearing_status']) ? $_POST['hearing_status'] : null;
 
-    if (!$proposal_id || !$hearing_date || !$hearing_time || !$session_type) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'All fields are required.'
-        ]);
-        exit;
+    if ($_SESSION['role'] === 'committee') {
+        if (!$proposal_id || !$hearing_date || !$hearing_time || !$session_type) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'All fields are required.'
+            ]);
+            exit;
+        }
+        $stmt = $conn->prepare("SELECT id FROM schedule WHERE proposal_id = ? AND hearing_date = ? AND hearing_time = ?");
+        $stmt->bind_param("iss", $proposal_id, $hearing_date, $hearing_time);
+
+    } else {
+        if (!$proposal_id || !$reading_date || !$reading_time || !$session_type) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'All fields are required.'
+            ]);
+            exit;
+        }
+        $stmt = $conn->prepare("SELECT id FROM schedule WHERE proposal_id = ? AND reading_date = ? AND reading_time = ?");
+        $stmt->bind_param("iss", $proposal_id, $reading_date, $reading_time);
     }
 
     // Check for duplicate schedule
-    $stmt = $conn->prepare("SELECT id FROM schedule WHERE proposal_id = ? AND hearing_date = ? AND hearing_time = ?");
-    $stmt->bind_param("iss", $proposal_id, $hearing_date, $hearing_time);
     $stmt->execute();
     $stmt->store_result();
     if ($stmt->num_rows > 0) {
@@ -36,8 +57,13 @@ if (isset($_POST['add_schedule'])) {
     }
     $stmt->close();
 
-    $stmt = $conn->prepare("INSERT INTO schedule (proposal_id, hearing_date, hearing_time, session_type, reading_status, remarks, hearing_status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("issssss", $proposal_id, $hearing_date, $hearing_time, $session_type, $reading_result, $remarks, $hearing_status);
+    if ($_SESSION['role'] === 'committee') {
+        $stmt = $conn->prepare("INSERT INTO schedule (proposal_id, hearing_date, hearing_time, session_type,  remarks, hearing_status) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssss", $proposal_id, $hearing_date, $hearing_time, $session_type, $remarks, $hearing_status);
+    } else {
+        $stmt = $conn->prepare("INSERT INTO schedule (proposal_id, reading_date, reading_time, session_type, reading_status, remarks) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssss", $proposal_id, $reading_date, $reading_time, $session_type, $reading_result, $remarks);
+    }
 
     if ($stmt->execute()) {
         echo json_encode([
@@ -58,26 +84,54 @@ if (isset($_POST['add_schedule'])) {
 if (isset($_POST['edit_schedule'])) {
     $schedule_id = isset($_POST['schedule_id']) ? intval($_POST['schedule_id']) : 0;
     $current_status = isset($_POST['current_status']) ? trim($_POST['current_status']) : '';
-    $hearing_date = isset($_POST['hearing_date']) ? $_POST['hearing_date'] : '';
-    $hearing_time = isset($_POST['hearing_time']) ? $_POST['hearing_time'] : '';
+
+    if ($_SESSION['role'] === 'committee') {
+        $hearing_date = isset($_POST['hearing_date']) ? $_POST['hearing_date'] : '';
+        $hearing_time = isset($_POST['hearing_time']) ? $_POST['hearing_time'] : '';
+    } else {
+        $reading_date = isset($_POST['reading_date']) ? $_POST['reading_date'] : '';
+        $reading_time = isset($_POST['reading_time']) ? $_POST['reading_time'] : '';
+    }
+
     $session_type = isset($_POST['session_type']) ? $_POST['session_type'] : 'Regular';
     $reading_result = isset($_POST['reading_result']) ? $_POST['reading_result'] : null;
     $remarks = isset($_POST['remarks']) ? trim($_POST['remarks']) : '';
     $hearing_status = isset($_POST['hearing_status']) ? $_POST['hearing_status'] : null;
 
-    if (!$schedule_id || !$hearing_date || !$hearing_time || !$session_type || !$reading_result) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'All fields are required.'
-        ]);
-        exit;
+
+    if ($_SESSION['role'] === 'committee') {
+        if (!$schedule_id || !$hearing_date || !$hearing_time || !$session_type || !$reading_result) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'All fields are required.'
+            ]);
+            exit;
+        }
+    } else {
+        if (!$schedule_id || !$reading_date || !$reading_time || !$session_type || !$hearing_status) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'All fields are required.'
+            ]);
+            exit;
+        }
     }
 
-    // Update schedule
-    $stmt = $conn->prepare("UPDATE schedule s JOIN ordinance_proposals p ON s.proposal_id = p.id
-        SET s.hearing_date=?, s.hearing_time=?, s.session_type=?, s.reading_result=?, s.remarks=?, s.hearing_status=?, p.current_status=?
-        WHERE s.id=?");
-    $stmt->bind_param("sssssssi", $hearing_date, $hearing_time, $session_type, $reading_result, $remarks, $hearing_status, $current_status, $schedule_id);
+
+
+    if ($_SESSION['role'] === 'secretary') {
+        // Update schedule
+        $stmt = $conn->prepare("UPDATE schedule s JOIN ordinance_proposals p ON s.proposal_id = p.id
+    SET s.hearing_date=?, s.hearing_time=?, s.session_type=?, s.reading_status=?, s.remarks=?, s.hearing_status=?
+    WHERE s.id=?");
+        $stmt->bind_param("sssssssi", $hearing_date, $hearing_time, $session_type, $reading_status, $remarks, $hearing_status, $schedule_id);
+    } else {
+        // Update schedule
+        $stmt = $conn->prepare("UPDATE schedule s JOIN ordinance_proposals p ON s.proposal_id = p.id
+    SET s.reading_date=?, s.reading_time=?, s.session_type=?, s.reading_status=?, s.remarks=?
+    WHERE s.id=?");
+        $stmt->bind_param("sssssssi", $reading_date, $reading_time, $session_type, $reading_status, $remarks, $schedule_id);
+    }
 
     if ($stmt->execute()) {
         echo json_encode([

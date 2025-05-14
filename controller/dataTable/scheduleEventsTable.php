@@ -4,15 +4,17 @@ header('Content-Type: application/json');
 
 $conn = getConnection();
 
-$sql = "SELECT s.id, s.proposal_id, s.hearing_date, s.hearing_time, s.session_type, s.reading_status, s.remarks, p.proposal, s.hearing_status, p.file_path
+$sql = "SELECT s.id, s.proposal_id, s.hearing_date, s.hearing_time, s.reading_date, s.reading_time, s.session_type, s.reading_status, s.remarks, p.proposal, s.hearing_status, p.file_path
         FROM schedule s
         JOIN ordinance_proposals p ON s.proposal_id = p.id";
 
 $result = $conn->query($sql);
 
-function proposalColor($proposal_id)
+// Color for hearing and reading events
+function eventColor($proposal_id, $type)
 {
-    $colors = [
+    // Use different base colors for hearing and reading
+    $hearingColors = [
         "#007bff",
         "#28a745",
         "#dc3545",
@@ -22,10 +24,25 @@ function proposalColor($proposal_id)
         "#fd7e14",
         "#20c997",
         "#6610f2",
-        "#e83e8c",
-        "#007bff"
+        "#e83e8c"
     ];
-    return $colors[$proposal_id % count($colors)];
+    $readingColors = [
+        "#6c757d",
+        "#20c997",
+        "#fd7e14",
+        "#6610f2",
+        "#e83e8c",
+        "#007bff",
+        "#28a745",
+        "#dc3545",
+        "#ffc107",
+        "#17a2b8"
+    ];
+    if ($type === 'hearing') {
+        return $hearingColors[$proposal_id % count($hearingColors)];
+    } else {
+        return $readingColors[$proposal_id % count($readingColors)];
+    }
 }
 
 // Helper to format time as h:i AM/PM
@@ -45,27 +62,54 @@ function formatTimeAMPM($time)
 
 $events = [];
 while ($row = $result->fetch_assoc()) {
-    // FullCalendar expects 'start' to be a full ISO string for timed events
-    $start = $row['hearing_date'];
-    // Use raw time (HH:MM:SS) for start, not formatted AM/PM
-    if (!empty($row['hearing_time'])) {
-        $start .= 'T' . $row['hearing_time'];
+    // Hearing event
+    if (!empty($row['hearing_date'])) {
+        $start = $row['hearing_date'];
+        if (!empty($row['hearing_time'])) {
+            $start .= 'T' . $row['hearing_time'];
+        }
+        $events[] = [
+            'id' => $row['id'] . '-hearing',
+            'proposal_id' => $row['proposal_id'],
+            'title' => '[Hearing] ' . $row['proposal'],
+            'start' => $start,
+            'type' => 'hearing',
+            'hearing_time' => $row['hearing_time'],
+            'hearing_time_formatted' => formatTimeAMPM($row['hearing_time']),
+            'reading_time' => $row['reading_time'], // include for consistency
+            'reading_time_formatted' => formatTimeAMPM($row['reading_time']),
+            'remarks' => $row['remarks'],
+            'session_type' => $row['session_type'],
+            'hearing_status' => $row['hearing_status'],
+            'reading_status' => $row['reading_status'],
+            'color' => eventColor($row['proposal_id'], 'hearing'),
+            'file_id' => $row['file_path']
+        ];
     }
-    $events[] = [
-        'id' => $row['id'],
-        'title' => $row['proposal'],
-        'start' => $start,
-        // Use raw time for eventDataTransform, formatted for modal
-        'hearing_time' => $row['hearing_time'],
-        'hearing_time_formatted' => formatTimeAMPM($row['hearing_time']),
-        'remarks' => $row['remarks'],
-        'proposal_id' => $row['proposal_id'],
-        'session_type' => $row['session_type'],
-        'reading_status' => $row['reading_status'],
-        'hearing_status' => $row['hearing_status'],
-        'color' => proposalColor($row['proposal_id']),
-        'file_id' => $row['file_path'] // <-- Add file_id for document viewing
-    ];
+    // Reading event
+    if (!empty($row['reading_date'])) {
+        $start = $row['reading_date'];
+        if (!empty($row['reading_time'])) {
+            $start .= 'T' . $row['reading_time'];
+        }
+        $events[] = [
+            'id' => $row['id'] . '-reading',
+            'proposal_id' => $row['proposal_id'],
+            'title' => '[Reading] ' . $row['proposal'],
+            'start' => $start,
+            'type' => 'reading',
+            'reading_time' => $row['reading_time'],
+            'reading_time_formatted' => formatTimeAMPM($row['reading_time']),
+            'hearing_time' => $row['hearing_time'], // include for consistency
+            'hearing_time_formatted' => formatTimeAMPM($row['hearing_time']),
+            'remarks' => $row['remarks'],
+            'session_type' => $row['session_type'],
+            'hearing_status' => $row['hearing_status'],
+            'reading_status' => $row['reading_status'],
+            'color' => eventColor($row['proposal_id'], 'reading'),
+            'file_id' => $row['file_path']
+        ];
+    }
 }
 
 echo json_encode($events);

@@ -124,7 +124,9 @@ include '../includes/main/navigation.php';
                                 <option value="Pending Approval">Pending Approval</option>
                                 <option value="Initial Planning">Initial Planning</option>
                                 <option value="Public Comment Period">Public Comment Period</option>
-                                <option value="Approved">Approved</option>
+                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'mayor'): ?>
+                                    <option value="Approved">Approved</option>
+                                <?php endif; ?>
                                 <option value="Rejected">Rejected</option>
                                 <option value="Implemented">Implemented</option>
                             </select>
@@ -142,6 +144,34 @@ include '../includes/main/navigation.php';
                         <button type="submit" class="btn btn-primary">Update Status</button>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mayor Upload Modal -->
+<div class="modal fade" id="mayorUploadModal" tabindex="-1" aria-labelledby="mayorUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="mayorUploadForm" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mayorUploadModalLabel">Upload Updated Proposal (Mayor)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="mayorUploadProposalId" name="proposal_id">
+                    <div class="mb-3">
+                        <label for="mayorFile" class="form-label">Select updated file (.doc or .docx)</label>
+                        <input class="form-control" type="file" id="mayorFile" name="file" accept=".doc,.docx" required>
+                    </div>
+                    <div class="alert alert-info">
+                        Uploading a file will automatically set the status to <b>Approved</b>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Upload & Approve</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -420,6 +450,40 @@ include '../includes/main/navigation.php';
             error: function (xhr, status, error) {
                 console.error('Ajax Error:', error);
                 showToast(error, 'error');
+            }
+        });
+    });
+
+    // Mayor upload button click
+    $(document).on('click', '.uploadMayorFileBtn', function () {
+        var proposalId = $(this).data('id');
+        $('#mayorUploadProposalId').val(proposalId);
+        $('#mayorFile').val('');
+        $('#mayorUploadModal').modal('show');
+    });
+
+    // Mayor upload form submit
+    $('#mayorUploadForm').on('submit', function (e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        formData.append('mayor_upload', true);
+
+        $.ajax({
+            url: '../../controller/store/ordinanceProposal_controller.php',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+                $('#mayorUploadModal').modal('hide');
+                showToast(result.message, result.status);
+                if (result.status === 'success') {
+                    $('#ordinanceStatusTable').DataTable().ajax.reload();
+                }
+            },
+            error: function (xhr, status, error) {
+                showToast('Error uploading file', 'error');
             }
         });
     });

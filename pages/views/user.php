@@ -93,6 +93,7 @@ while ($row = $result->fetch_assoc()) {
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role" required onchange="toggleCommitteeDropdown()">
                             <option value="">Select Role</option>
+                            <option value="mayor">Mayor</option>
                             <option value="legislator">Legislator</option>
                             <option value="admin">Administrator</option>
                             <option value="committee">Committee</option>

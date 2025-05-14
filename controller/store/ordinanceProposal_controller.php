@@ -257,5 +257,110 @@ if (isset($_POST['delete_ordinanceProposal'])) {
     }
     exit;
 }
+
+if (isset($_POST['mayor_upload'])) {
+    try {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'mayor') {
+            throw new Exception('Unauthorized: Only mayor can perform this action.');
+        }
+        if (!isset($_POST['proposal_id']) || empty($_POST['proposal_id'])) {
+            throw new Exception('Proposal ID is required.');
+        }
+        $proposal_id = mysqli_real_escape_string($conn, $_POST['proposal_id']);
+
+        // Check if proposal exists
+        $proposalQuery = "SELECT file_path, file_name FROM ordinance_proposals WHERE id = '$proposal_id'";
+        $proposalResult = $conn->query($proposalQuery);
+        if (!$proposalResult || $proposalResult->num_rows === 0) {
+            throw new Exception('Proposal not found.');
+        }
+        $proposal = $proposalResult->fetch_assoc();
+
+        // Validate file
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('File upload failed.');
+        }
+        $file = $_FILES['file'];
+        $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExt, ['doc', 'docx'])) {
+            throw new Exception('Only .doc and .docx files are allowed.');
+        }
+        $baseFileName = pathinfo($file['name'], PATHINFO_FILENAME);
+        $newFileName = $baseFileName . '.' . $fileExt;
+
+        // Google Drive update
+        $client = getGoogleDriveClient();
+        $driveService = new Drive($client);
+
+        // If file_path exists, update file in Drive, else upload new
+        if (!empty($proposal['file_path'])) {
+            // Update file content in Drive
+            $fileId = $proposal['file_path'];
+            $fileMetadata = new Drive\DriveFile([
+                'name' => $newFileName
+            ]);
+            $content = file_get_contents($file['tmp_name']);
+            $driveService->files->update($fileId, $fileMetadata, [
+                'data' => $content,
+                'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'uploadType' => 'multipart',
+                'supportsAllDrives' => true
+            ]);
+            $driveFileId = $fileId;
+        } else {
+            // Upload new file to Drive
+            $folderId = '15-c0hmu-lBaEyxhkj1hdcYQRwnAgymoj';
+            $fileMetadata = new Drive\DriveFile([
+                'name' => $newFileName,
+                'parents' => [$folderId]
+            ]);
+            $content = file_get_contents($file['tmp_name']);
+            $driveFile = $driveService->files->create($fileMetadata, [
+                'data' => $content,
+                'mimeType' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'uploadType' => 'multipart',
+                'fields' => 'id',
+                'supportsAllDrives' => true
+            ]);
+            $driveFileId = $driveFile->id;
+        }
+
+        // Update proposal record with new file info
+        $updateQuery = "UPDATE ordinance_proposals SET file_name = ?, file_path = ? WHERE id = ?";
+        $stmt = $conn->prepare($updateQuery);
+        $stmt->bind_param("ssi", $newFileName, $driveFileId, $proposal_id);
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to update proposal file info.');
+        }
+
+        // Insert status "Approved" by mayor
+        $user_id = $_SESSION['user_id'];
+        $remarks = 'Approved by mayor via file upload.';
+        $action_type = 'Approved';
+        $statusQuery = "INSERT INTO ordinance_status (proposal_id, user_id, remarks, action_type) VALUES (?, ?, ?, ?)";
+        $stmt2 = $conn->prepare($statusQuery);
+        $stmt2->bind_param("iiss", $proposal_id, $user_id, $remarks, $action_type);
+        if (!$stmt2->execute()) {
+            throw new Exception('Failed to update status to Approved.');
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'File uploaded and status set to Approved.'
+        ]);
+    } catch (GoogleServiceException $e) {
+        error_log('Drive API Error: ' . $e->getMessage());
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Google Drive error: ' . $e->getMessage()
+        ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
 ?>
 
