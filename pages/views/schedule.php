@@ -221,15 +221,17 @@ include '../includes/main/navigation.php';
                             <option value="For Amendment">For Amendment</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="schedule_hearing_status" class="form-label">Hearing Status</label>
-                        <select class="form-select" id="schedule_hearing_status" name="hearing_status" required>
-                            <option value="">Select Hearing Status</option>
-                            <option value="1st Hearing">1st Hearing</option>
-                            <option value="2nd Hearing">2nd Hearing</option>
-                            <option value="3rd Hearing">3rd Hearing</option>
-                        </select>
-                    </div>
+                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
+                        <div class="mb-3">
+                            <label for="schedule_hearing_status" class="form-label">Hearing Status</label>
+                            <select class="form-select" id="schedule_hearing_status" name="hearing_status" required>
+                                <option value="">Select Hearing Status</option>
+                                <option value="1st Hearing">1st Hearing</option>
+                                <option value="2nd Hearing">2nd Hearing</option>
+                                <option value="3rd Hearing">3rd Hearing</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
                     <div class="mb-3">
                         <label for="remarks" class="form-label">Remarks (optional)</label>
                         <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
