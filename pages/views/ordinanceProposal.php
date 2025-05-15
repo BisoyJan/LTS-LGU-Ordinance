@@ -325,8 +325,8 @@ include '../includes/main/navigation.php';
 
                     <?php if ($_SESSION['role'] === 'secretary'): ?>
                         <div class="mb-3">
-                            <label for="schedule_reading_result" class="form-label">Reading Status</label>
-                            <select class="form-select" id="schedule_reading_result" name="reading_result" required>
+                            <label for="schedule_reading_status" class="form-label">Reading Status</label>
+                            <select class="form-select" id="schedule_reading_status" name="reading_status" required>
                                 <option value="">Select Reading Status</option>
                                 <option value="1st Reading">1st Reading</option>
                                 <option value="2nd Reading">2nd Reading</option>

@@ -299,13 +299,13 @@ include '../includes/main/navigation.php';
                     .then(response => response.json())
                     .then(function (events) {
                         let filtered = events;
-                        // committee: only show reading schedules
+                        // committee: only show hearing schedules
                         if (userRole === 'committee') {
-                            filtered = events.filter(e => e.type === 'reading');
-                        }
-                        // secretary: only show hearing schedules
-                        else if (userRole === 'secretary') {
                             filtered = events.filter(e => e.type === 'hearing');
+                        }
+                        // secretary: only show reading schedules
+                        else if (userRole === 'secretary') {
+                            filtered = events.filter(e => e.type === 'reading');
                         }
                         // admin and others: show all
                         successCallback(filtered);

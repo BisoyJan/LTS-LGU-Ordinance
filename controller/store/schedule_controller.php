@@ -94,13 +94,13 @@ if (isset($_POST['edit_schedule'])) {
     }
 
     $session_type = isset($_POST['session_type']) ? $_POST['session_type'] : 'Regular';
-    $reading_result = isset($_POST['reading_result']) ? $_POST['reading_result'] : null;
+    $reading_status = isset($_POST['reading_status']) ? $_POST['reading_status'] : null;
     $remarks = isset($_POST['remarks']) ? trim($_POST['remarks']) : '';
     $hearing_status = isset($_POST['hearing_status']) ? $_POST['hearing_status'] : null;
 
 
     if ($_SESSION['role'] === 'committee') {
-        if (!$schedule_id || !$hearing_date || !$hearing_time || !$session_type || !$reading_result) {
+        if (!$schedule_id || !$hearing_date || !$hearing_time || !$session_type || !$reading_status) {
             echo json_encode([
                 'status' => 'error',
                 'message' => 'All fields are required.'
@@ -124,13 +124,13 @@ if (isset($_POST['edit_schedule'])) {
         $stmt = $conn->prepare("UPDATE schedule s JOIN ordinance_proposals p ON s.proposal_id = p.id
     SET s.hearing_date=?, s.hearing_time=?, s.session_type=?, s.reading_status=?, s.remarks=?, s.hearing_status=?
     WHERE s.id=?");
-        $stmt->bind_param("sssssssi", $hearing_date, $hearing_time, $session_type, $reading_status, $remarks, $hearing_status, $schedule_id);
+        $stmt->bind_param("ssssssi", $hearing_date, $hearing_time, $session_type, $reading_status, $remarks, $hearing_status, $schedule_id);
     } else {
         // Update schedule
         $stmt = $conn->prepare("UPDATE schedule s JOIN ordinance_proposals p ON s.proposal_id = p.id
     SET s.reading_date=?, s.reading_time=?, s.session_type=?, s.reading_status=?, s.remarks=?
     WHERE s.id=?");
-        $stmt->bind_param("sssssssi", $reading_date, $reading_time, $session_type, $reading_status, $remarks, $schedule_id);
+        $stmt->bind_param("sssssi", $reading_date, $reading_time, $session_type, $reading_status, $remarks, $schedule_id);
     }
 
     if ($stmt->execute()) {
