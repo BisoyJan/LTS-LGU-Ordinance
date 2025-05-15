@@ -95,12 +95,31 @@ if (isset($_POST['edit_schedule'])) {
 
     $session_type = isset($_POST['session_type']) ? $_POST['session_type'] : 'Regular';
     $reading_status = isset($_POST['reading_status']) ? $_POST['reading_status'] : null;
+
     $remarks = isset($_POST['remarks']) ? trim($_POST['remarks']) : '';
     $hearing_status = isset($_POST['hearing_status']) ? $_POST['hearing_status'] : null;
 
+    // Dump and die for debugging
+    // var_dump([
+    //     'schedule_id' => $schedule_id,
+    //     'current_status' => $current_status,
+    //     'hearing_date' => isset($hearing_date) ? $hearing_date : null,
+    //     'hearing_time' => isset($hearing_time) ? $hearing_time : null,
+    //     'reading_date' => isset($reading_date) ? $reading_date : null,
+    //     'reading_time' => isset($reading_time) ? $reading_time : null,
+    //     'session_type' => $session_type,
+    //     'reading_status' => $reading_status,
+    //     'remarks' => $remarks,
+    //     'hearing_status' => $hearing_status,
+    //     'role' => $_SESSION['role']
+    // ]);
+    // die();
+
+    // Debugging output removed
+
 
     if ($_SESSION['role'] === 'committee') {
-        if (!$schedule_id || !$hearing_date || !$hearing_time || !$session_type || !$reading_status) {
+        if (!$schedule_id || !$hearing_date || !$hearing_time || !$session_type || !$hearing_status) {
             echo json_encode([
                 'status' => 'error',
                 'message' => 'All fields are required.'
@@ -108,18 +127,16 @@ if (isset($_POST['edit_schedule'])) {
             exit;
         }
     } else {
-        if (!$schedule_id || !$reading_date || !$reading_time || !$session_type || !$hearing_status) {
+        if (!$schedule_id || !$reading_date || !$reading_time || !$session_type || !$reading_status) {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'All fields are required.'
+                'message' => 'All fields are required. '
             ]);
             exit;
         }
     }
 
-
-
-    if ($_SESSION['role'] === 'secretary') {
+    if ($_SESSION['role'] === 'committee') {
         // Update schedule
         $stmt = $conn->prepare("UPDATE schedule s JOIN ordinance_proposals p ON s.proposal_id = p.id
     SET s.hearing_date=?, s.hearing_time=?, s.session_type=?, s.reading_status=?, s.remarks=?, s.hearing_status=?

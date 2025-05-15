@@ -130,18 +130,33 @@ include '../includes/main/navigation.php';
         <div class="modal-content">
             <form id="editScheduleForm">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editScheduleModalLabel">Edit Hearing Schedule</h5>
+                    <h5 class="modal-title" id="editScheduleModalLabel">
+                        Edit <?php echo ($_SESSION['role'] === 'committee') ? 'Hearing' : 'Reading'; ?> Schedule</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="edit_schedule_id" name="schedule_id">
-                    <div class="mb-3">
-                        <label for="edit_hearing_date" class="form-label">Hearing Date</label>
-                        <input type="date" class="form-control" id="edit_hearing_date" name="hearing_date" required>
+                    <div id="hearingFields"
+                        style="<?php echo ($_SESSION['role'] === 'committee') ? '' : 'display:none;'; ?>">
+                        <div class="mb-3">
+                            <label for="edit_hearing_date" class="form-label">Hearing Date</label>
+                            <input type="date" class="form-control" id="edit_hearing_date" name="hearing_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_hearing_time" class="form-label">Hearing Time</label>
+                            <input type="time" class="form-control" id="edit_hearing_time" name="hearing_time">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_hearing_time" class="form-label">Hearing Time</label>
-                        <input type="time" class="form-control" id="edit_hearing_time" name="hearing_time" required>
+                    <div id="readingFields"
+                        style="<?php echo ($_SESSION['role'] !== 'committee') ? '' : 'display:none;'; ?>">
+                        <div class="mb-3">
+                            <label for="edit_reading_date" class="form-label">Reading Date</label>
+                            <input type="date" class="form-control" id="edit_reading_date" name="reading_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_reading_time" class="form-label">Reading Time</label>
+                            <input type="time" class="form-control" id="edit_reading_time" name="reading_time">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="edit_session_type" class="form-label">Session Type</label>
@@ -151,18 +166,37 @@ include '../includes/main/navigation.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="edit_reading_status" class="form-label">Reading Status</label>
-                        <select class="form-select" id="edit_reading_status" name="reading_status" required>
-                            <option value="">Select Status</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Deferred">Deferred</option>
-                            <option value="Enacted">Enacted</option>
-                            <option value="For Amendment">For Amendment</option>
-                            <option value="Passed 1st Reading">Passed 1st Reading</option>
-                            <option value="Passed 2nd Reading">Passed 2nd Reading</option>
-                            <option value="Passed 3rd Reading">Passed 3rd Reading</option>
+                        <!-- Only show hearing_status if committee, otherwise keep it hidden but not required -->
+                        <?php if ($_SESSION['role'] === 'committee'): ?>
+                            <label for="edit_hearing_status" class="form-label">Hearing Status</label>
+                            <select class="form-select" id="edit_hearing_status" name="hearing_status" required>
+                                <option value="">Select Status</option>
+                                <option value="1st Hearing">1st Hearing</option>
+                                <option value="2nd Hearing">2nd Hearing</option>
+                                <option value="3rd Hearing">3rd Hearing</option>
+                            </select>
+                        <?php else: ?>
+                            <!-- Hidden input, not required, to avoid browser validation error -->
+                            <input type="hidden" id="edit_hearing_status" name="hearing_status">
+                        <?php endif; ?>
 
-                        </select>
+                        <!-- Only show reading_status if not committee, otherwise keep it hidden but not required -->
+                        <?php if ($_SESSION['role'] !== 'committee'): ?>
+                            <label for="edit_reading_status" class="form-label">Reading Status</label>
+                            <select class="form-select" id="edit_reading_status" name="reading_status" required>
+                                <option value="">Select Status</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Deferred">Deferred</option>
+                                <option value="Enacted">Enacted</option>
+                                <option value="For Amendment">For Amendment</option>
+                                <option value="Passed 1st Reading">Passed 1st Reading</option>
+                                <option value="Passed 2nd Reading">Passed 2nd Reading</option>
+                                <option value="Passed 3rd Reading">Passed 3rd Reading</option>
+                            </select>
+                        <?php else: ?>
+                            <!-- Hidden input, not required, to avoid browser validation error -->
+                            <input type="hidden" id="edit_reading_status" name="reading_status">
+                        <?php endif; ?>
                     </div>
                     <div class="mb-3">
                         <label for="edit_remarks" class="form-label">Remarks (optional)</label>
@@ -221,24 +255,24 @@ include '../includes/main/navigation.php';
 
                     <?php if ($_SESSION['role'] !== 'committee'): ?>
                         <div class="mb-3">
-                            <label for="reading_result" class="form-label">Reading Status</label>
-                            <select class="form-select" id="reading_result" name="reading_result">
-                                <option value="">Select Reading Status</option>
-                                <option value="1st Reading">1st Reading</option>
-                                <option value="2nd Reading">2nd Reading</option>
-                                <option value="3rd Reading">3rd Reading</option>
-                            </select>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
-                        <div class="mb-3">
                             <label for="schedule_hearing_status" class="form-label">Hearing Status</label>
                             <select class="form-select" id="schedule_hearing_status" name="hearing_status" required>
                                 <option value="">Select Hearing Status</option>
                                 <option value="1st Hearing">1st Hearing</option>
                                 <option value="2nd Hearing">2nd Hearing</option>
                                 <option value="3rd Hearing">3rd Hearing</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($_SESSION['role'] !== 'secretary'): ?>
+                        <div class="mb-3">
+                            <label for="reading_status" class="form-label">Reading Status</label>
+                            <select class="form-select" id="reading_status" name="reading_status" required>
+                                <option value="">Select Reading Status</option>
+                                <option value="1st Reading">1st Reading</option>
+                                <option value="2nd Reading">2nd Reading</option>
+                                <option value="3rd Reading">3rd Reading</option>
                             </select>
                         </div>
                     <?php endif; ?>
@@ -489,17 +523,29 @@ include '../includes/main/navigation.php';
             $('#eventDetailsModal').one('hidden.bs.modal', function () {
                 // Fill edit modal fields
                 $('#edit_schedule_id').val(selectedEvent.id);
-                $('#edit_current_status').val(selectedEvent.extendedProps.current_status || '');
-                $('#edit_hearing_date').val(selectedEvent.start ? selectedEvent.start.toISOString().slice(0, 10) : '');
+
+                // Always set both hearing and reading fields if present
+                $('#edit_hearing_date').val(selectedEvent.extendedProps.hearing_date || '');
                 if (selectedEvent.extendedProps.hearing_time) {
                     let t = selectedEvent.extendedProps.hearing_time.split(':');
                     $('#edit_hearing_time').val(t[0] + ':' + t[1]);
+                } else {
+                    $('#edit_hearing_time').val('');
                 }
+
+                $('#edit_reading_date').val(selectedEvent.extendedProps.reading_date || '');
+                if (selectedEvent.extendedProps.reading_time) {
+                    let t = selectedEvent.extendedProps.reading_time.split(':');
+                    $('#edit_reading_time').val(t[0] + ':' + t[1]);
+                } else {
+                    $('#edit_reading_time').val('');
+                }
+
                 $('#edit_session_type').val(selectedEvent.extendedProps.session_type || 'Regular');
-                $('#edit_reading_result').val(selectedEvent.extendedProps.reading_result || '');
+                $('#edit_reading_status').val(selectedEvent.extendedProps.reading_status || '');
                 $('#edit_remarks').val(selectedEvent.extendedProps.remarks || '');
+
                 $('#editScheduleModal').modal('show');
-                // Remove this handler so it doesn't stack
                 $('#eventDetailsModal').off('hidden.bs.modal');
             });
         });

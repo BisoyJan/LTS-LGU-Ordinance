@@ -205,12 +205,12 @@ if (isset($_POST['update_status'])) {
         $user_id = $_SESSION['user_id'];
         $remarks = mysqli_real_escape_string($conn, $_POST['remarks']);
         $action_type = mysqli_real_escape_string($conn, $_POST['action_type']);
-        $reading_status = mysqli_real_escape_string($conn, $_POST['reading_status']);
+        //$reading_status = mysqli_real_escape_string($conn, $_POST['reading_status']);
 
-        $query = "INSERT INTO ordinance_status (proposal_id, user_id, remarks, action_type, reading_status) 
-                 VALUES (?, ?, ?, ?, ?)";
+        $query = "INSERT INTO ordinance_status (proposal_id, user_id, remarks, action_type) 
+                 VALUES (?, ?, ?, ?)";
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("iisss", $proposal_id, $user_id, $remarks, $action_type, $reading_status);
+        $stmt->bind_param("iiss", $proposal_id, $user_id, $remarks, $action_type);
 
         if ($stmt->execute()) {
             echo json_encode([
